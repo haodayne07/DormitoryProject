@@ -14,12 +14,8 @@ DormHub is a modern dormitory management platform built to streamline and optimi
 * **Staff Management:** Strict role-based access control system (Full-access Admin & Standard Staff). 
 * **Security:** Secure user authentication using JWT Tokens, robust password hashing, and strict API route authorization.
 
-## 👨‍💻 Development Team (Scrum)
-* **Nguyen Nhat Hao** - Core Developer
-* **Quang Minh** - Scrum Master
-* **Dinh Khoi** - Database Engineer
-* **Trong Nghia** - Web Designer
-* **Kim Phong** - Programmer
+## 👨‍💻 Developer
+* **Nguyen Nhat Hao** - Full Stack Developer
 
 ## ⚙️ Installation Guide
 
