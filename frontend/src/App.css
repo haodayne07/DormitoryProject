@@ -1,0 +1,42 @@
+/* Tùy chỉnh kiểu dáng SweetAlert2 dùng chung cho toàn bộ dự án DormHub */
+
+/* 1. Áp dụng cho Toast (Thông báo góc) */
+.swal2-toast {
+    /* Thêm viền BOLD SOLID màu xanh thương hiệu */
+    border: 3px solid #1c3d8c !important; /* Mã màu xanh đậm DormHub */
+    
+    /* Làm cho các góc bo nhẹ nhưng dứt khoát hơn */
+    border-radius: 12px !important;
+    
+    /* Tùy chỉnh màu sắc icon check Success */
+    .swal2-success-ring {
+        border-color: rgba(28, 61, 140, 0.3) !important; /* Viền nhạt xung quanh */
+    }
+    .swal2-success-line-tip,
+    .swal2-success-line-long {
+        background-color: #1c3d8c !important; /* Dấu check xanh đậm */
+    }
+}
+
+/* 2. Áp dụng cho các Hộp thoại Confirm/Alert chính (Màu xanh thương hiệu) */
+.swal2-popup {
+    /* Bo góc dứt khoát */
+    border-radius: 20px !important;
+}
+
+/* Nút Đồng ý (Confirm) màu xanh thương hiệu */
+.swal2-confirm {
+    background-color: #1c3d8c !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+}
+
+/* Nút Hủy (Cancel) màu đỏ cảnh báo */
+.swal2-cancel {
+    border-radius: 8px !important;
+    font-weight: bold !important;
+}/* Ép thông báo SweetAlert2 luôn hiển thị trên cùng (vượt qua Modal của MUI) */
+.swal2-container {
+  z-index: 9999 !important;
+}
