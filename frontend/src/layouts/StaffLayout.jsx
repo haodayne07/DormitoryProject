@@ -7,8 +7,8 @@ export default function StaffLayout() {
       <aside style={{ width: '250px', background: '#047857', color: 'white', padding: '20px' }}>
         <h2 style={{ marginBottom: '30px' }}>Staff Portal</h2>
         <ul style={{ listStyle: 'none', padding: 0, lineHeight: '2.5' }}>
-          <li><Link to="/staff" style={{ color: 'white', textDecoration: 'none' }}>🔑 Quản lý phòng</Link></li>
-          <li><Link to="/staff/students" style={{ color: '#a7f3d0', textDecoration: 'none' }}>👩‍🎓 Quản lý sinh viên</Link></li>
+          <li><Link to="/staff" style={{ color: 'white', textDecoration: 'none' }}>Manager Room</Link></li>
+          <li><Link to="/staff/students" style={{ color: '#a7f3d0', textDecoration: 'none' }}>Manager Student</Link></li>
         </ul>
       </aside>
 

@@ -1,16 +1,16 @@
-/* Reset lại toàn bộ padding và margin mặc định của trình duyệt */
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Ép ứng dụng hiển thị Full 100% màn hình */
+
 html, body, #root {
   width: 100%;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   background-color: #f4f6f8;
-  overflow-x: hidden; /* Chống cuộn ngang */
+  overflow-x: hidden; 
 }

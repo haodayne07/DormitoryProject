@@ -15,7 +15,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'; 
 import axios from 'axios';
-// THÊM MỚI: Import useLocation và useNavigate để bắt URL từ MoMo trả về
+// NEW: Import useLocation and useNavigate to catch URL returned from MoMo
 import { useLocation, useNavigate } from 'react-router-dom'; 
 
 export default function StudentDashboard() {
@@ -27,7 +27,7 @@ export default function StudentDashboard() {
   const [isAgreed, setIsAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
-  // THÊM MỚI: State để xử lý hiệu ứng loading khi đang chuyển hướng sang MoMo
+  // NEW: State to handle loading effect while redirecting to MoMo
   const [paying, setPaying] = useState(false);
 
   const [toast, setToast] = useState({ open: false, message: '', type: 'success' });
@@ -38,7 +38,7 @@ export default function StudentDashboard() {
 
   const currentStudentId = localStorage.getItem('user_id'); 
 
-  // THÊM MỚI: Khởi tạo location và navigate
+  // NEW: Initialize location and navigate
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -49,7 +49,7 @@ export default function StudentDashboard() {
         setLoading(false);
       })
       .catch(err => {
-        console.error("Lỗi tải dữ liệu Student Dashboard:", err);
+        console.error("Error loading Student Dashboard data:", err);
         setLoading(false);
       });
   };
@@ -60,7 +60,7 @@ export default function StudentDashboard() {
   }, []);
 
   // ==========================================
-  // THÊM MỚI: XỬ LÝ KẾT QUẢ MOMO TRẢ VỀ TRÊN URL
+  // NEW: HANDLE MOMO RESULT RETURNED ON URL
   // ==========================================
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -69,22 +69,22 @@ export default function StudentDashboard() {
 
     if (resultCode && orderId) {
       if (resultCode === '0') {
-        // Giao dịch thành công, gọi API cập nhật trạng thái
+        // Transaction successful, call API to update status
         axios.get(`http://127.0.0.1:5000/api/payments/momo_return?resultCode=${resultCode}&orderId=${orderId}`)
           .then(() => {
-            setToast({ open: true, message: 'Thanh toán MoMo thành công!', type: 'success' });
-            fetchData(); // Tải lại dữ liệu để chuyển thẻ hóa đơn sang màu xanh
+            setToast({ open: true, message: 'MoMo payment successful!', type: 'success' });
+            fetchData(); // Reload data to turn the bill card green
           })
           .catch(err => {
-            console.error("Lỗi cập nhật thanh toán:", err);
-            setToast({ open: true, message: 'Có lỗi khi cập nhật trạng thái hóa đơn.', type: 'error' });
+            console.error("Error updating payment:", err);
+            setToast({ open: true, message: 'Error updating bill status.', type: 'error' });
           });
       } else {
-        // Giao dịch thất bại hoặc bị hủy
-        setToast({ open: true, message: 'Giao dịch bị hủy hoặc chưa hoàn tất.', type: 'error' });
+        // Transaction failed or cancelled
+        setToast({ open: true, message: 'Transaction cancelled or incomplete.', type: 'error' });
       }
       
-      // Xóa các tham số trên URL để làm sạch đường dẫn
+      // Remove URL parameters to clean the path
       navigate('/student/dashboard', { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,25 +99,25 @@ export default function StudentDashboard() {
       room_id: selectedRoom.id
     })
     .then(() => { 
-      setToast({ open: true, message: 'Gửi yêu cầu thành công! Vui lòng chờ.', type: 'success' });
+      setToast({ open: true, message: 'Request submitted successfully! Please wait.', type: 'success' });
       setOpenLegalDialog(false);
       setSelectedRoom(null);
       setLoading(true); 
       fetchData(); 
     })
     .catch(err => {
-      setToast({ open: true, message: "Có lỗi xảy ra: " + (err.response?.data?.error || err.message), type: 'error' });
+      setToast({ open: true, message: "An error occurred: " + (err.response?.data?.error || err.message), type: 'error' });
     })
     .finally(() => setSubmitting(false));
   };
 
   // ==========================================
-  // HÀM XỬ LÝ GỌI API THANH TOÁN MOMO
+  // FUNCTION TO HANDLE MOMO PAYMENT API CALL
   // ==========================================
   const handlePayment = () => {
     setPaying(true);
     
-    // Lấy ID hóa đơn thật từ database trả về
+    // Get real bill ID returned from database
     const billId = data.billing.id || 1;
 
     axios.post('http://127.0.0.1:5000/api/payments/create_momo_payment', {
@@ -129,7 +129,7 @@ export default function StudentDashboard() {
       }
     })
     .catch(err => {
-      setToast({ open: true, message: "Lỗi tạo thanh toán: " + (err.response?.data?.error || err.message), type: 'error' });
+      setToast({ open: true, message: "Error creating payment: " + (err.response?.data?.error || err.message), type: 'error' });
       setPaying(false);
     });
   };
@@ -152,7 +152,7 @@ export default function StudentDashboard() {
             <ErrorOutlineIcon sx={{ fontSize: 40 }} />
           </Avatar>
           <Typography variant="h6" fontWeight="bold" color="#991b1b" sx={{ textTransform: 'uppercase', mb: 4, lineHeight: 1.6 }}>
-            HỢP ĐỒNG CỦA BẠN ĐÃ BỊ TỪ CHỐI, HÃY LIÊN HỆ ADMIN@123 ĐỂ BIẾT THÊM CHI TIẾT
+            YOUR CONTRACT HAS BEEN REJECTED, PLEASE CONTACT ADMIN@123 FOR MORE DETAILS
           </Typography>
           <Button 
             variant="contained" 
@@ -160,7 +160,7 @@ export default function StudentDashboard() {
             href="mailto:admin@gmail.com"
             sx={{ borderRadius: '8px', fontWeight: 'bold', px: 4, py: 1.5, boxShadow: 'none', '&:hover': {bgcolor: '#b91c1c'} }}
           >
-            Liên hệ ngay với Admin
+            Contact Admin now
           </Button>
         </Paper>
       </Box>
@@ -174,11 +174,11 @@ export default function StudentDashboard() {
           <Avatar sx={{ width: 80, height: 80, bgcolor: '#fef08a', color: '#ca8a04', margin: '0 auto', mb: 3 }}>
             <HourglassEmptyIcon sx={{ fontSize: 40 }} />
           </Avatar>
-          <Typography variant="h5" fontWeight="bold" color="#1e293b" mb={1}>Đang chờ duyệt hợp đồng</Typography>
+          <Typography variant="h5" fontWeight="bold" color="#1e293b" mb={1}>Pending contract approval</Typography>
           <Typography variant="body1" color="#64748b" mb={4}>
-            Yêu cầu thuê phòng của bạn đã được gửi đến Ban quản lý. Vui lòng chờ Admin xác nhận. Quá trình này có thể mất từ 1-2 ngày làm việc.
+            Your room rental request has been sent to Management. Please wait for Admin confirmation. This process may take 1-2 business days.
           </Typography>
-          <Button variant="outlined" disabled sx={{ borderRadius: '8px', fontWeight: 'bold', px: 4, py: 1.5 }}>Trạng thái: Pending</Button>
+          <Button variant="outlined" disabled sx={{ borderRadius: '8px', fontWeight: 'bold', px: 4, py: 1.5 }}>Status: Pending</Button>
         </Paper>
       </Box>
     );
@@ -188,8 +188,8 @@ export default function StudentDashboard() {
     return (
       <Box sx={containerStyle}>
         <Box sx={{ mb: 5, pb: 3, borderBottom: '2px solid #f0f0f0' }}>
-          <Typography variant="h4" fontWeight="900" color="#1e293b" mb={1}>Chào {data.studentName},</Typography>
-          <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 'normal' }}>Dưới đây là danh sách các phòng đang trống. Hãy chọn một phòng để tiếp tục.</Typography>
+          <Typography variant="h4" fontWeight="900" color="#1e293b" mb={1}>Hello {data.studentName},</Typography>
+          <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 'normal' }}>Below is a list of available rooms. Please select a room to continue.</Typography>
         </Box>
 
         <Grid container spacing={4}>
@@ -223,10 +223,10 @@ export default function StudentDashboard() {
                     />
                   ) : (
                     <Box sx={{ width: '100%', height: '240px', bgcolor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Typography color="#94a3b8" variant="body2">Chưa có ảnh</Typography>
+                      <Typography color="#94a3b8" variant="body2">No image</Typography>
                     </Box>
                   )}
-                  <Chip label="Tin ưu tiên" size="small" sx={{ position: 'absolute', bottom: 12, left: 12, bgcolor: 'rgba(0,0,0,0.7)', color: 'white', fontWeight: 'bold', fontSize: '12px', py: 1.5 }} />
+                  <Chip label="Featured" size="small" sx={{ position: 'absolute', bottom: 12, left: 12, bgcolor: 'rgba(0,0,0,0.7)', color: 'white', fontWeight: 'bold', fontSize: '12px', py: 1.5 }} />
                 </Box>
 
                 <CardContent sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', '&:last-child': { pb: 3 } }}>
@@ -235,13 +235,13 @@ export default function StudentDashboard() {
                       {room.name}
                     </Typography>
                     <Typography variant="h6" fontWeight="bold" color="#ea580c" mb={2}>
-                      {formatCurrency(room.price)} / tháng
+                      {formatCurrency(room.price)} / month
                     </Typography>
                   </Box>
                   <Stack direction="row" alignItems="center" spacing={1.5} color="#64748b" sx={{ fontSize: '14px' }}>
-                    <Typography variant="body2" fontWeight="500">Sức chứa: {room.capacity} người</Typography>
+                    <Typography variant="body2" fontWeight="500">Capacity: {room.capacity} people</Typography>
                     <Typography variant="body2">•</Typography>
-                    <Typography variant="body2" fontWeight="500">Đang trống: {room.capacity - room.current_tenants}</Typography>
+                    <Typography variant="body2" fontWeight="500">Available: {room.capacity - room.current_tenants}</Typography>
                   </Stack>
                 </CardContent>
               </Card>
@@ -249,33 +249,33 @@ export default function StudentDashboard() {
           ))}
           {(!data.availableRooms || data.availableRooms.length === 0) && (
             <Grid item xs={12}>
-              <Typography sx={{ p: 6, textAlign: 'center', color: '#64748b', bgcolor: '#f8fafc', borderRadius: '12px', fontSize: '1.2rem' }}>Hiện tại không có phòng nào đang trống.</Typography>
+              <Typography sx={{ p: 6, textAlign: 'center', color: '#64748b', bgcolor: '#f8fafc', borderRadius: '12px', fontSize: '1.2rem' }}>There are currently no available rooms.</Typography>
             </Grid>
           )}
         </Grid>
 
         <Dialog open={Boolean(selectedRoom)} onClose={() => setSelectedRoom(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-          <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b', borderBottom: '1px solid #ebebeb', pb: 2, pt: 3, px: 4 }}>Chi tiết {selectedRoom?.name}</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 'bold', color: '#1e293b', borderBottom: '1px solid #ebebeb', pb: 2, pt: 3, px: 4 }}>Details of {selectedRoom?.name}</DialogTitle>
           <DialogContent sx={{ p: 4 }}>
             {selectedRoom?.image_url ? (
               <Box 
                 component="img"
                 src={selectedRoom.image_url.startsWith('http') ? selectedRoom.image_url : `http://127.0.0.1:5000/${selectedRoom.image_url.replace(/^\/+/, '')}`}
                 alt={selectedRoom.name}
-                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/f1f5f9/94a3b8?text=Loi+tai+anh"; }}
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/f1f5f9/94a3b8?text=Image+Load+Error"; }}
                 sx={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: '12px', mb: 3 }}
               />
             ) : (
               <Box sx={{ width: '100%', height: '250px', bgcolor: '#f8fafc', borderRadius: '12px', mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed #cbd5e1' }}>
-                <Typography color="#94a3b8" fontWeight="bold">Phòng này chưa cập nhật hình ảnh</Typography>
+                <Typography color="#94a3b8" fontWeight="bold">This room has no images updated yet</Typography>
               </Box>
             )}
 
-            <Typography variant="h5" fontWeight="bold" color="#ea580c" mb={1}>{formatCurrency(selectedRoom?.price)} <span style={{fontSize: '16px', color: '#64748b', fontWeight: 'normal'}}>/ sinh viên / tháng</span></Typography>
-            <Typography variant="body1" color="#64748b" mb={3}>Tiền điện nước sẽ được tính riêng theo chỉ số tiêu thụ thực tế hàng tháng.</Typography>
+            <Typography variant="h5" fontWeight="bold" color="#ea580c" mb={1}>{formatCurrency(selectedRoom?.price)} <span style={{fontSize: '16px', color: '#64748b', fontWeight: 'normal'}}>/ student / month</span></Typography>
+            <Typography variant="body1" color="#64748b" mb={3}>Electricity and water bills will be calculated separately based on actual monthly consumption.</Typography>
             
             <Divider sx={{ my: 3 }} />
-            <Typography variant="h6" fontWeight="bold" mb={2} color="#1e293b">Nội thất & Tiện ích có sẵn:</Typography>
+            <Typography variant="h6" fontWeight="bold" mb={2} color="#1e293b">Available Furniture & Amenities:</Typography>
             <Grid container spacing={2}>
               {selectedRoom?.amenities && selectedRoom.amenities.length > 0 ? (
                 selectedRoom.amenities.map((item, idx) => (
@@ -288,32 +288,32 @@ export default function StudentDashboard() {
                 ))
               ) : (
                 <Grid item xs={12}>
-                  <Typography variant="body1" color="#ef4444" sx={{ fontStyle: 'italic' }}>* Phòng này hiện chưa được trang bị thiết bị nào.</Typography>
+                  <Typography variant="body1" color="#ef4444" sx={{ fontStyle: 'italic' }}>* This room is currently not equipped with any amenities.</Typography>
                 </Grid>
               )}
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3, px: 4, borderTop: '1px solid #ebebeb' }}>
-            <Button onClick={() => setSelectedRoom(null)} color="inherit" sx={{ fontWeight: 'bold', px: 3, transition: '0.2s', '&:hover': { bgcolor: '#f1f5f9' } }}>Hủy</Button>
+            <Button onClick={() => setSelectedRoom(null)} color="inherit" sx={{ fontWeight: 'bold', px: 3, transition: '0.2s', '&:hover': { bgcolor: '#f1f5f9' } }}>Cancel</Button>
             <Button variant="contained" sx={{ fontWeight: 'bold', borderRadius: '8px', bgcolor: '#f97316', transition: '0.2s', '&:hover': {bgcolor: '#ea580c', transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(234, 88, 12, 0.3)'}, px: 4, py: 1.5 }} onClick={() => { setOpenLegalDialog(true); }}>
-              Đăng ký thuê
+              Register to rent
             </Button>
           </DialogActions>
         </Dialog>
 
         <Dialog open={openLegalDialog} onClose={() => setOpenLegalDialog(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-          <DialogTitle sx={{ fontWeight: 'bold', borderBottom: '1px solid #ebebeb', p: 3 }}>ĐIỀU KHOẢN & CAM KẾT</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 'bold', borderBottom: '1px solid #ebebeb', p: 3 }}>TERMS & COMMITMENTS</DialogTitle>
           <DialogContent sx={{ p: 4 }}>
             <Box sx={{ bgcolor: '#f8fafc', p: 4, borderRadius: '12px', border: '1px solid #e2e8f0', height: '300px', overflowY: 'auto', mb: 4 }}>
-              <Typography variant="subtitle1" fontWeight="bold" mb={1}>Điều 1. Nghĩa vụ tài chính</Typography>
-              <Typography variant="body1" mb={3} color="#475569">Thanh toán tiền phòng và tiền điện nước đúng hạn.</Typography>
+              <Typography variant="subtitle1" fontWeight="bold" mb={1}>Article 1. Financial Obligations</Typography>
+              <Typography variant="body1" mb={3} color="#475569">Pay room, electricity, and water bills on time.</Typography>
             </Box>
-            <FormControlLabel control={<Checkbox checked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)} color="warning" size="large" />} label={<Typography variant="h6" fontWeight="bold">Tôi đã đọc và cam kết tuân thủ.</Typography>} />
+            <FormControlLabel control={<Checkbox checked={isAgreed} onChange={(e) => setIsAgreed(e.target.checked)} color="warning" size="large" />} label={<Typography variant="h6" fontWeight="bold">I have read and commit to comply.</Typography>} />
           </DialogContent>
           <DialogActions sx={{ p: 3, borderTop: '1px solid #ebebeb' }}>
-            <Button onClick={() => setOpenLegalDialog(false)} color="inherit" sx={{ fontWeight: 'bold', px: 3, transition: '0.2s', '&:hover': { bgcolor: '#f1f5f9' } }}>Hủy</Button>
+            <Button onClick={() => setOpenLegalDialog(false)} color="inherit" sx={{ fontWeight: 'bold', px: 3, transition: '0.2s', '&:hover': { bgcolor: '#f1f5f9' } }}>Cancel</Button>
             <Button variant="contained" disabled={!isAgreed || submitting} onClick={handleRequestRoom} sx={{ fontWeight: 'bold', borderRadius: '8px', bgcolor: '#f97316', transition: '0.2s', '&:hover': {bgcolor: '#ea580c', transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(234, 88, 12, 0.3)'}, px: 4, py: 1.5 }}>
-              Đồng ý & Gửi yêu cầu
+              Agree & Submit Request
             </Button>
           </DialogActions>
         </Dialog>
@@ -336,29 +336,29 @@ export default function StudentDashboard() {
   return (
     <Box sx={containerStyle}>
       <Box sx={{ mb: 5, pb: 3, borderBottom: '2px solid #f0f0f0' }}>
-        <Typography variant="h4" fontWeight="900" color="#1e293b" mb={1}>Chào buổi sáng, {data.studentName}!</Typography>
-        <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 'normal' }}>Chúc bạn một ngày học tập thật hiệu quả.</Typography>
+        <Typography variant="h4" fontWeight="900" color="#1e293b" mb={1}>Good morning, {data.studentName}!</Typography>
+        <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 'normal' }}>Wishing you a productive study day.</Typography>
       </Box>
 
       <Grid container spacing={4}>
         <Grid item xs={12} lg={7}>
           <Stack spacing={4}>
             
-            {/* THẺ 1: Trạng thái Thanh toán */}
+            {/* CARD 1: Payment Status */}
             {data.billing.status === 'unpaid' ? (
               <Card sx={{ borderRadius: '12px', border: '1px solid #fca5a5', bgcolor: '#fef2f2', boxShadow: 'none', transition: '0.3s', '&:hover': { boxShadow: '0 8px 24px rgba(239, 68, 68, 0.1)' } }}>
                 <CardContent sx={{ p: { xs: 3, md: 4, lg: 5 }, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 3 }}>
                   <Stack direction="row" alignItems="center" spacing={3}>
                     <WarningAmberIcon sx={{ color: '#ef4444', fontSize: 40 }} />
                     <Box>
-                      <Typography variant="h5" fontWeight="bold" color="#991b1b" mb={0.5}>Hóa đơn {data.billing.month} chưa thanh toán</Typography>
-                      <Typography variant="body1" color="#b91c1c">Hạn chót: <strong>{data.billing.dueDate}</strong></Typography>
+                      <Typography variant="h5" fontWeight="bold" color="#991b1b" mb={0.5}>Unpaid bill for {data.billing.month}</Typography>
+                      <Typography variant="body1" color="#b91c1c">Deadline: <strong>{data.billing.dueDate}</strong></Typography>
                     </Box>
                   </Stack>
                   <Stack direction={{ xs: 'column', sm: 'row' }} alignItems="center" spacing={4}>
                     <Typography variant="h4" fontWeight="900" color="#ef4444">{formatCurrency(data.billing.amount)}</Typography>
                     
-                    {/* Nút thanh toán MoMo */}
+                    {/* MoMo Payment Button */}
                     <Button 
                       variant="contained" 
                       color="error" 
@@ -371,7 +371,7 @@ export default function StudentDashboard() {
                         '&:hover': { bgcolor: '#dc2626', transform: 'translateY(-3px)', boxShadow: '0 6px 16px rgba(220, 38, 38, 0.4)' }
                       }}
                     >
-                      {paying ? 'Đang chuyển hướng...' : 'Thanh toán ngay'}
+                      {paying ? 'Redirecting...' : 'Pay now'}
                     </Button>
                   </Stack>
                 </CardContent>
@@ -380,17 +380,18 @@ export default function StudentDashboard() {
               <Card sx={{ borderRadius: '12px', border: '1px solid #bbf7d0', bgcolor: '#f0fdf4', boxShadow: 'none' }}>
                 <CardContent sx={{ p: { xs: 3, md: 4 }, display: 'flex', alignItems: 'center', gap: 2 }}>
                   <CheckCircleIcon sx={{ color: '#16a34a', fontSize: 36 }} />
-                  <Typography variant="h6" fontWeight="bold" color="#166534">Tuyệt vời! Bạn đã thanh toán đủ cước phí tháng này.</Typography>
+                  <Typography variant="h6" fontWeight="bold" color="#166534">Great! You have fully paid this month's fees.</Typography>
                 </CardContent>
               </Card>
             )}
 
-            {/* THẺ 2: Thông tin Lưu trú */}
+            {/* CARD 2: Accommodation Information */}
             <Card sx={{ borderRadius: '12px', border: '1px solid #ebebeb', boxShadow: 'none' }}>
               <CardContent sx={{ p: { xs: 3, md: 4 } }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                  <Typography variant="h5" fontWeight="bold" color="#1e293b">Thông tin lưu trú</Typography>
+                  <Typography variant="h5" fontWeight="bold" color="#1e293b">Accommodation Information</Typography>
                   <Button 
+                    onClick={() => navigate('/student/room')}
                     endIcon={<ArrowForwardIosIcon sx={{ fontSize: '14px !important' }}/>} 
                     size="large" 
                     sx={{ 
@@ -399,26 +400,26 @@ export default function StudentDashboard() {
                       '&:hover': { bgcolor: '#eff6ff', borderRadius: '8px', px: 2 }
                     }}
                   >
-                     Chi tiết phòng
+                     Room Details
                   </Button>
                 </Stack>
                 
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={4}>
                     <Box sx={{ p: 3, bgcolor: '#f8fafc', borderRadius: '10px', border: '1px solid #f1f5f9', transition: '0.3s', '&:hover': { borderColor: '#cbd5e1', bgcolor: 'white' } }}>
-                      <Typography variant="subtitle2" color="#64748b" display="block" mb={1} textTransform="uppercase">Phòng hiện tại</Typography>
+                      <Typography variant="subtitle2" color="#64748b" display="block" mb={1} textTransform="uppercase">Current Room</Typography>
                       <Typography variant="h5" fontWeight="900" color="#2563eb">{data.room.name}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <Box sx={{ p: 3, bgcolor: '#f8fafc', borderRadius: '10px', border: '1px solid #f1f5f9', transition: '0.3s', '&:hover': { borderColor: '#cbd5e1', bgcolor: 'white' } }}>
-                      <Typography variant="subtitle2" color="#64748b" display="block" mb={1} textTransform="uppercase">Loại phòng</Typography>
+                      <Typography variant="subtitle2" color="#64748b" display="block" mb={1} textTransform="uppercase">Room Type</Typography>
                       <Typography variant="h6" fontWeight="bold" color="#1e293b">{data.room.type}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <Box sx={{ p: 3, bgcolor: '#f8fafc', borderRadius: '10px', border: '1px solid #f1f5f9', transition: '0.3s', '&:hover': { borderColor: '#cbd5e1', bgcolor: 'white' } }}>
-                      <Typography variant="subtitle2" color="#64748b" display="block" mb={1} textTransform="uppercase">Hạn hợp đồng</Typography>
+                      <Typography variant="subtitle2" color="#64748b" display="block" mb={1} textTransform="uppercase">Contract Expiry</Typography>
                       <Typography variant="h6" fontWeight="bold" color="#1e293b">{data.room.endDate}</Typography>
                     </Box>
                   </Grid>
@@ -426,11 +427,11 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
 
-            {/* THẺ 3: Bảo trì */}
+            {/* CARD 3: Maintenance */}
             <Card sx={{ borderRadius: '12px', border: '1px solid #ebebeb', boxShadow: 'none' }}>
               <CardContent sx={{ p: { xs: 3, md: 4 } }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-                  <Typography variant="h5" fontWeight="bold" color="#1e293b">Bảo trì gần đây</Typography>
+                  <Typography variant="h5" fontWeight="bold" color="#1e293b">Recent Maintenance</Typography>
                   <Button 
                     size="large" 
                     sx={{ 
@@ -439,14 +440,14 @@ export default function StudentDashboard() {
                       '&:hover': { bgcolor: '#f1f5f9', color: '#1e293b', borderRadius: '8px', px: 2 }
                     }}
                   >
-                    Xem tất cả
+                    View all
                   </Button>
                 </Stack>
                 
                 <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ py: 2.5, borderTop: '1px solid #f1f5f9' }}>
                   <Box>
                     <Typography variant="h6" fontWeight="bold" color="#1e293b" mb={0.5}>{data.maintenance.title}</Typography>
-                    <Typography variant="body1" color="#94a3b8">Gửi lúc: {data.maintenance.date}</Typography>
+                    <Typography variant="body1" color="#94a3b8">Submitted at: {data.maintenance.date}</Typography>
                   </Box>
                   <Chip label={data.maintenance.status} sx={{ bgcolor: '#fef08a', color: '#ca8a04', fontWeight: 'bold', borderRadius: '6px', px: 2, py: 2.5, fontSize: '14px' }} />
                 </Stack>
@@ -456,55 +457,77 @@ export default function StudentDashboard() {
           </Stack>
         </Grid>
 
-        {/* CỘT PHẢI (Sidebar) */}
+        {/* RIGHT COLUMN (NEWSBOARD) */}
         <Grid item xs={12} lg={5}>
-          <Card sx={{ borderRadius: '12px', border: '1px solid #ebebeb', boxShadow: 'none', height: '100%', bgcolor: '#fafafa' }}>
-            <CardContent sx={{ p: { xs: 3, md: 4 }, display: 'flex', flexDirection: 'column' }}>
-              <Typography variant="h5" fontWeight="bold" color="#1e293b" mb={4}>Bảng tin KTX</Typography>
-              
-              <Stack spacing={2.5} sx={{ flexGrow: 1 }}>
-                {data.events.map((event) => (
-                  <Box 
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Typography variant="h4" fontWeight="900" color="#1e293b" mb={3}>
+              Dormitory Newsboard
+            </Typography>
+            
+            <Stack spacing={3} sx={{ flexGrow: 1 }}>
+              {data.events && data.events.length > 0 ? (
+                data.events.map((event) => (
+                  <Card 
                     key={event.id} 
                     sx={{ 
-                      p: 3, borderRadius: '10px', bgcolor: 'white', border: '1px solid #ebebeb', 
-                      transition: 'all 0.3s ease',
-                      '&:hover': { borderColor: '#94a3b8', cursor: 'pointer', transform: 'translateY(-3px)', boxShadow: '0 6px 16px rgba(0,0,0,0.06)' } 
+                      borderRadius: '16px', 
+                      border: '1px solid #e2e8f0', 
+                      boxShadow: 'none', 
+                      transition: 'all 0.3s ease', 
+                      '&:hover': { borderColor: '#cbd5e1', transform: 'translateY(-2px)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } 
                     }}
                   >
-                    <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
-                      <Chip 
-                        label={event.type === 'warning' ? 'Cảnh báo' : event.type === 'maintenance' ? 'Bảo trì' : 'Thông tin'} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: event.type === 'warning' ? '#fef3c7' : event.type === 'maintenance' ? '#fee2e2' : '#eff6ff', 
-                          color: event.type === 'warning' ? '#d97706' : event.type === 'maintenance' ? '#dc2626' : '#2563eb',
-                          fontWeight: 'bold', fontSize: '12px', height: '24px', borderRadius: '4px', px: 1
-                        }} 
-                      />
-                      <Typography variant="body2" color="#94a3b8" fontWeight="500">{event.date}</Typography>
-                    </Stack>
-                    <Typography variant="body1" fontWeight="bold" color="#1e293b" sx={{ lineHeight: 1.5 }}>
-                      {event.title}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-              
-              <Button 
-                fullWidth 
-                variant="outlined" 
-                size="large" 
-                sx={{ 
-                  mt: 4, borderRadius: '8px', textTransform: 'none', fontWeight: 'bold', fontSize: '1rem', color: '#1c4f9f', borderColor: '#d4d4d8', py: 1.5,
-                  transition: 'all 0.3s ease',
-                  '&:hover': { bgcolor: '#7e9cba', borderColor: '#94a3b8', transform: 'translateY(-2px)' } 
-                }}
-              >
-                Xem tất cả thông báo
-              </Button>
-            </CardContent>
-          </Card>
+                    <CardContent sx={{ p: 3, '&:last-child': { pb: 3 } }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Chip 
+                          label={event.type === 'warning' ? 'Warning' : event.type === 'maintenance' ? 'Maintenance' : 'Information'} 
+                          size="small" 
+                          sx={{ 
+                            bgcolor: event.type === 'warning' ? '#fef3c7' : event.type === 'maintenance' ? '#fee2e2' : '#eff6ff', 
+                            color: event.type === 'warning' ? '#d97706' : event.type === 'maintenance' ? '#dc2626' : '#2563eb',
+                            fontWeight: 'bold', fontSize: '13px', borderRadius: '6px', px: 1.5, py: 1.5
+                          }} 
+                        />
+                        <Typography variant="body2" color="#94a3b8" fontWeight="500">
+                          {event.date}
+                        </Typography>
+                      </Stack>
+                      
+                      {/* Tiêu đề */}
+                      <Typography variant="h6" fontWeight="bold" color="#1e293b" sx={{ lineHeight: 1.4, mb: 2 }}>
+                        {event.title}
+                      </Typography>
+
+                      {/* Hiển thị TOÀN BỘ NỘI DUNG chi tiết */}
+                      <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                        <Typography variant="body2" color="#475569" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+                          {event.description}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Typography variant="body1" color="#94a3b8" mt={2} fontStyle="italic">
+                  No announcements right now.
+                </Typography>
+              )}
+            </Stack>
+            
+            <Button 
+              fullWidth 
+              variant="outlined" 
+              size="large" 
+              onClick={() => navigate('/student/events')} 
+              sx={{ 
+                mt: 4, borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', fontSize: '1.1rem', color: '#1c4f9f', borderColor: '#cbd5e1', py: 1.5,
+                transition: 'all 0.3s ease',
+                '&:hover': { bgcolor: '#f8fafc', borderColor: '#94a3b8' } 
+              }}
+            >
+              View all announcements
+            </Button>
+          </Box>
         </Grid>
 
       </Grid>

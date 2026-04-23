@@ -18,9 +18,6 @@ class User(db.Model):
     balance = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # ==========================================
-    # CÁC TRƯỜNG THÔNG TIN MỚI CHO SINH VIÊN
-    # ==========================================
     full_name = db.Column(db.String(100), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
-    student_code = db.Column(db.String(20), unique=True, nullable=True) # Mã Sinh Viên
+    student_code = db.Column(db.String(20), unique=True, nullable=True) 

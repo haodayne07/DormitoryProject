@@ -5,28 +5,27 @@ from datetime import date
 import traceback
 
 def auto_generate_bills():
-    """Hàm này sẽ tự động chạy vào ngày 1 hàng tháng (đã cài ở __init__.py)"""
-    print("⏳ Đang chạy tác vụ tự động kiểm tra và tạo hóa đơn...")
-    count = 0 # Đưa biến count ra ngoài try để dễ return
+    """This function will run automatically on the 1st of every month (configured in __init__.py)"""
+    print("⏳ Running automated task to check and generate bills...")
+    count = 0 
     try:
         today = date.today()
         current_month = today.month
         current_year = today.year
         
-        # 1. Tìm tất cả các Hợp đồng đang có sinh viên ở (active)
+      
         active_contracts = Contract.query.filter_by(status='active').all()
         
         for contract in active_contracts:
-            title = f"Tiền phòng tháng {current_month}/{current_year}"
+            title = f"Room Fee Month {current_month}/{current_year}"
             
-            # 2. Kiểm tra xem tháng này đã tạo hóa đơn cho hợp đồng này chưa để tránh tạo trùng
+            
             existing_bill = Bill.query.filter_by(contract_id=contract.contract_id, title=title).first()
             
             if not existing_bill:
                 room = Room.query.get(contract.room_id)
                 room_price = getattr(room, 'price', 1500000) 
                 
-                # 3. Hạn chót đóng tiền là ngày 15 hàng tháng
                 due_date = date(current_year, current_month, 15)
                 
                 new_bill = Bill(
@@ -40,10 +39,10 @@ def auto_generate_bills():
                 count += 1
                 
         db.session.commit()
-        print(f"✅ Đã tự động tạo thành công {count} hóa đơn cho tháng {current_month}!")
-        return count # TRẢ VỀ SỐ LƯỢNG CHO API
+        print(f"✅ Successfully auto-generated {count} bills for month {current_month}!")
+        return count 
     except Exception as e:
         db.session.rollback()
-        print("❌ Lỗi khi tự động tạo hóa đơn:")
+        print("❌ Error during auto-generation of bills:")
         traceback.print_exc()
         return 0

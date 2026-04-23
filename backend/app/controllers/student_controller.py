@@ -1,27 +1,27 @@
 from flask import request, jsonify
 from app.extensions import db
 from app.models.auth_model import User
-# THÊM IMPORT BẢNG Bill, RentalRequest VÀO ĐÂY:
 from app.models.rental_model import Contract, Payment, Bill, RentalRequest 
-from app.models.room_model import Room, Device # Đã thêm Device
+from app.models.room_model import Room, Device 
 from werkzeug.security import generate_password_hash
 import traceback
 from datetime import datetime
+from app.models.event_model import Event
 
-# 1. READ: Lấy danh sách sinh viên
+# 1. READ: Get student list
 def get_all_students_logic():
     try:
-        # Lấy tất cả user có role là student
+        # Get all users with 'student' role
         students = User.query.filter_by(role='student').all()
         result = []
         
         for student in students:
-            # Tự động lấy ID (thử 'id' trước, nếu không có thì lấy 'user_id')
+            # Auto-fetch ID
             s_id = getattr(student, 'id', getattr(student, 'user_id', None))
             
-            # Tìm hợp đồng đang hoạt động của sinh viên này
+            # Find active contract for this student
             contract = Contract.query.filter_by(user_id=s_id, status='active').first()
-            room_name = "Chưa xếp phòng"
+            room_name = "Unassigned"
             
             if contract:
                 room = Room.query.get(contract.room_id)
@@ -39,28 +39,28 @@ def get_all_students_logic():
             })
         return jsonify(result), 200
     except Exception as e:
-        print("--- LỖI BACKEND GET STUDENTS ---")
+        print("--- BACKEND ERROR GET STUDENTS ---")
         traceback.print_exc()
-        return jsonify({"error": f"Lỗi cơ sở dữ liệu: {str(e)}"}), 500
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
-# 2. CREATE: Thêm sinh viên mới (Đã cập nhật check trùng Email)
+# 2. CREATE: Add new student
 def create_student_logic():
     try:
         data = request.json
         if not data.get('username') or not data.get('email'):
-            return jsonify({"error": "Thiếu username hoặc email"}), 400
+            return jsonify({"error": "Missing username or email"}), 400
 
-        # Kiểm tra trùng lặp Username
+        # Check Duplicate Username
         if User.query.filter_by(username=data['username']).first():
-            return jsonify({"error": "Tên đăng nhập này đã tồn tại!"}), 400
+            return jsonify({"error": "This username already exists!"}), 400
 
-        # KIỂM TRA TRÙNG LẶP EMAIL (Xử lý lỗi bạn đang gặp phải)
+        # Check Duplicate Email
         if User.query.filter_by(email=data['email']).first():
-            return jsonify({"error": f"Địa chỉ email '{data['email']}' đã được sử dụng!"}), 400
+            return jsonify({"error": f"Email address '{data['email']}' is already in use!"}), 400
 
         hashed_pw = generate_password_hash(data.get('password', '123456'))
         
-        # Tạo đối tượng User mới với đầy đủ các trường tiềm năng
+        # Create new User object
         new_student = User(
             username=data['username'],
             email=data['email'],
@@ -68,96 +68,91 @@ def create_student_logic():
             role='student'
         )
         
-        # Chỉ gán các trường nếu Model có khai báo để tránh lỗi
+        # Only assign attributes if they exist in the Model
         if hasattr(new_student, 'full_name'): new_student.full_name = data.get('username')
         if hasattr(new_student, 'balance'): new_student.balance = 0.0
         if hasattr(new_student, 'phone'): new_student.phone = ""
 
         db.session.add(new_student)
         db.session.commit()
-        return jsonify({"message": "Thêm sinh viên thành công!"}), 201
+        return jsonify({"message": "Student added successfully!"}), 201
     except Exception as e:
         db.session.rollback()
-        print("--- LỖI BACKEND CREATE STUDENT ---")
+        print("--- BACKEND ERROR CREATE STUDENT ---")
         traceback.print_exc()
-        # Trả về lỗi chi tiết nếu có lỗi phát sinh khác
-        return jsonify({"error": f"Lỗi thêm mới: {str(e)}"}), 400
+        return jsonify({"error": f"Creation error: {str(e)}"}), 400
 
-# 3. UPDATE: Cập nhật thông tin (Đã cập nhật check trùng Email khi đổi email)
+# 3. UPDATE: Update student information
 def update_student_logic(user_id):
     try:
         user = User.query.get_or_404(user_id)
         data = request.json
         
-        # Kiểm tra trùng email nếu người dùng muốn thay đổi email
+        # Check duplicate email if changing email
         if 'email' in data and data['email'] != user.email:
             existing_email = User.query.filter_by(email=data['email']).first()
             if existing_email:
-                return jsonify({"error": "Địa chỉ email này đã được sử dụng bởi người khác!"}), 400
+                return jsonify({"error": "This email address is already used by another user!"}), 400
             user.email = data['email']
 
         if 'full_name' in data: user.full_name = data['full_name']
         
         db.session.commit()
-        return jsonify({"message": "Cập nhật thành công!"}), 200
+        return jsonify({"message": "Updated successfully!"}), 200
     except Exception as e:
         db.session.rollback()
-        print("--- LỖI BACKEND UPDATE STUDENT ---")
+        print("--- BACKEND ERROR UPDATE STUDENT ---")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 400
 
-# 4. DELETE: Xóa sinh viên
+# 4. DELETE: Remove student
 def delete_student_logic(user_id):
     try:
         user = User.query.get_or_404(user_id)
-        # Chặn xóa nếu sinh viên đang ở (có hợp đồng active)
+        # Block deletion if student has an active contract
         active_c = Contract.query.filter_by(user_id=user_id, status='active').first()
         if active_c:
-            return jsonify({"error": "Không thể xóa sinh viên đang ở trong phòng!"}), 400
+            return jsonify({"error": "Cannot delete a student currently residing in a room!"}), 400
 
         db.session.delete(user)
         db.session.commit()
-        return jsonify({"message": "Xóa thành công!"}), 200
+        return jsonify({"message": "Deleted successfully!"}), 200
     except Exception as e:
         db.session.rollback()
-        print("--- LỖI BACKEND DELETE STUDENT ---")
+        print("--- BACKEND ERROR DELETE STUDENT ---")
         traceback.print_exc()
-        return jsonify({"error": "Không thể xóa do ràng buộc dữ liệu"}), 400
+        return jsonify({"error": "Cannot delete due to data constraints"}), 400
 
 
+# Đừng quên thêm import model Event ở đầu file:
+# from app.models.event_model import Event
 # =========================================================
-# LẤY DỮ LIỆU DASHBOARD CHO TỪNG SINH VIÊN (HỖ TRỢ 3 TRẠNG THÁI)
+# GET DASHBOARD DATA FOR STUDENT (CONNECTED TO REAL EVENTS)
 # =========================================================
 def get_student_dashboard_logic(student_id):
     try:
-        # Lấy thông tin sinh viên
         student = User.query.get(student_id)
         if not student:
-            return jsonify({'error': 'Không tìm thấy sinh viên'}), 404
+            return jsonify({'error': 'Student not found'}), 404
 
-        # 1. Kiểm tra Hợp đồng đang ở (Trạng thái 3)
         contract = Contract.query.filter_by(user_id=student_id, status='active').first()
         has_room = bool(contract)
         
-        # 2. Kiểm tra Yêu cầu đang chờ duyệt (Trạng thái 2)
         pending_request = RentalRequest.query.filter_by(user_id=student_id, status='pending').first()
         has_pending_request = bool(pending_request)
 
-        # Khởi tạo dữ liệu mặc định
-        room_info = {"name": "Chưa có phòng", "type": "N/A", "endDate": "N/A"}
+        room_info = {"name": "No room assigned", "type": "N/A", "endDate": "N/A"}
         billing_info = {"status": "paid", "amount": 0, "dueDate": "", "month": ""}
         available_rooms_data = []
 
         if has_room:
-            # --- Sinh viên đã có phòng (Lấy dữ liệu như cũ) ---
             if contract.room:
                 room_info = {
                     "name": contract.room.room_name,
-                    "type": f"Phòng {contract.room.capacity} người",
+                    "type": f"{contract.room.capacity}-person room",
                     "endDate": contract.end_date.strftime('%d/%m/%Y') if contract.end_date else "N/A"
                 }
             
-            # Join từ Bill qua Contract để tìm Hóa đơn chưa thanh toán
             unpaid_bill = Bill.query.join(Contract).filter(
                 Contract.user_id == student_id, 
                 Bill.status == 'unpaid'
@@ -169,17 +164,13 @@ def get_student_dashboard_logic(student_id):
                     "status": "unpaid",
                     "amount": unpaid_bill.amount,
                     "dueDate": b_date.strftime('%d/%m/%Y') if b_date else "N/A",
-                    "month": f"Tháng {b_date.month if b_date else datetime.now().month}"
+                    "month": f"Month {b_date.month if b_date else datetime.now().month}"
                 }
         elif not has_pending_request:
-            # --- Sinh viên chưa có phòng & chưa gửi yêu cầu (Trạng thái 1) ---
             available_rooms = Room.query.filter(Room.status.in_(['Trống', 'available', 'trống', 'vacant', 'Vacant'])).all()
             
             for r in available_rooms:
-                # 1. Đếm số hợp đồng active để ra số người đang ở hiện tại
                 current_tenants = Contract.query.filter_by(room_id=r.room_id, status='active').count() 
-                
-                # 2. Lấy danh sách thiết bị từ DB
                 amenities_list = [d.devices_name for d in r.devices] if hasattr(r, 'devices') and r.devices else []
                 
                 available_rooms_data.append({
@@ -192,26 +183,33 @@ def get_student_dashboard_logic(student_id):
                     "amenities": amenities_list
                 })
 
+        # BƯỚC QUAN TRỌNG: LẤY 3 BẢN TIN MỚI NHẤT TỪ DATABASE THẬT
+        recent_events = Event.query.order_by(Event.event_id.desc()).limit(3).all()
+        events_data = []
+        for e in recent_events:
+            events_data.append({
+                "id": e.event_id,
+                "title": e.title,
+                "description": e.description,
+                "type": e.type, # info, warning, maintenance
+                "date": e.event_date.strftime('%d/%m/%Y') if e.event_date else "N/A"
+            })
+
         return jsonify({
             'studentName': getattr(student, 'full_name', student.username) or student.username,
-            'hasRoom': has_room,                         # Trạng thái 3
-            'hasPendingRequest': has_pending_request,    # Trạng thái 2
-            'availableRooms': available_rooms_data,      # Dữ liệu cho Trạng thái 1
+            'hasRoom': has_room,                         
+            'hasPendingRequest': has_pending_request,    
+            'availableRooms': available_rooms_data,      
             'room': room_info,
             'billing': billing_info,
-            'maintenance': { "title": "Sửa quạt trần kêu to", "status": "Đang xử lý", "date": "Hôm qua" },
-            'events': [ 
-                { "id": 1, "title": "Lịch cúp điện Tòa A", "type": "warning", "date": "10/04/2026" },
-                { "id": 2, "title": "Đăng ký nội trú học kỳ Hè", "type": "info", "date": "08/04/2026" },
-                { "id": 3, "title": "Bảo trì thang máy định kỳ", "type": "maintenance", "date": "05/04/2026" }
-            ]
+            'maintenance': { "title": "Routine maintenance", "status": "Processing", "date": "Yesterday" },
+            'events': events_data  # <--- TRUYỀN DỮ LIỆU BẢNG TIN THẬT RA FRONTEND
         }), 200
 
     except Exception as e:
-        print("--- LỖI BACKEND GET STUDENT DASHBOARD ---")
+        print("--- BACKEND ERROR GET STUDENT DASHBOARD ---")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
 
 def request_room_logic():
     try:
@@ -220,38 +218,40 @@ def request_room_logic():
         room_id = data.get('room_id')
         
         if not user_id or not room_id:
-            return jsonify({'error': 'Thiếu thông tin người dùng hoặc phòng'}), 400
+            return jsonify({'error': 'Missing user or room information'}), 400
 
-        # Kiểm tra xem sinh viên đã có yêu cầu pending nào chưa
+        # Check for existing pending requests
         exist = RentalRequest.query.filter_by(user_id=user_id, status='pending').first()
         if exist:
-            return jsonify({'error': 'Bạn đã có yêu cầu đang chờ duyệt rồi!'}), 400
+            return jsonify({'error': 'You already have a pending request!'}), 400
             
         new_request = RentalRequest(user_id=user_id, room_id=room_id, status='pending')
         db.session.add(new_request)
         db.session.commit()
         
-        return jsonify({'message': 'Gửi yêu cầu thuê phòng thành công!'}), 200
+        return jsonify({'message': 'Room rental request submitted successfully!'}), 200
     except Exception as e:
         db.session.rollback()
-        print("--- LỖI BACKEND REQUEST ROOM ---")
+        print("--- BACKEND ERROR REQUEST ROOM ---")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
 # =========================================================
-# LẤY CHI TIẾT PHÒNG CHO TRANG "PHÒNG CỦA TÔI" (My Room)
+# GET ROOM DETAILS FOR "MY ROOM" PAGE
 # =========================================================
 def get_my_room_details_logic(student_id):
     try:
+        
         contract = Contract.query.filter_by(user_id=student_id, status='active').first()
         if not contract:
-            return jsonify({'error': 'Bạn hiện chưa có phòng nào.'}), 404
+            return jsonify({'error': 'You currently do not have a room.'}), 404
 
         room = Room.query.get(contract.room_id)
         if not room:
-            return jsonify({'error': 'Không tìm thấy thông tin phòng.'}), 404
+            return jsonify({'error': 'Room information not found.'}), 404
             
+        
         active_contracts = Contract.query.filter_by(room_id=room.room_id, status='active').all()
         roommates = []
         for c in active_contracts:
@@ -261,11 +261,11 @@ def get_my_room_details_logic(student_id):
                 roommates.append({
                     "id": u_id,
                     "name": getattr(user, 'full_name', user.username) or user.username,
-                    "email": getattr(user, 'email', 'Chưa cập nhật'),
-                    "phone": getattr(user, 'phone', 'Chưa cập nhật'),
+                    "email": getattr(user, 'email', 'Not updated'),
+                    "phone": getattr(user, 'phone', 'Not updated'),
                     "is_me": str(u_id) == str(student_id)
                 })
-        
+       
         devices_data = []
         if hasattr(room, 'devices') and room.devices:
             for d in room.devices:
@@ -276,6 +276,7 @@ def get_my_room_details_logic(student_id):
                     "purchase_date": d.purchase_date.strftime('%d/%m/%Y') if getattr(d, 'purchase_date', None) else "N/A"
                 })
 
+       
         return jsonify({
             "room_info": {
                 "id": room.room_id,
@@ -285,53 +286,57 @@ def get_my_room_details_logic(student_id):
                 "price": room.price,
                 "image_url": getattr(room, 'image_url', None)
             },
+            "contract_info": {
+                "contract_id": contract.contract_id,
+                "start_date": contract.start_date.strftime('%d/%m/%Y') if contract.start_date else "N/A",
+                "end_date": contract.end_date.strftime('%d/%m/%Y') if contract.end_date else "N/A",
+                "deposit": float(contract.deposit_amount) if contract.deposit_amount else 0
+            },
             "roommates": roommates,
             "devices": devices_data
         }), 200
 
     except Exception as e:
-        print("--- LỖI BACKEND GET MY ROOM DETAILS ---")
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
 # =========================================================
-# (ĐÃ FIX TÊN CỘT) LẤY LỊCH SỬ BÁO CÁO SỰ CỐ CỦA SINH VIÊN
+# GET STUDENT MAINTENANCE HISTORY
 # =========================================================
 def get_maintenance_history_logic(student_id):
     try:
         from app.models.rental_model import MaintenanceHistory
 
-        # Lấy các yêu cầu bảo trì của sinh viên này
+        # Get maintenance requests for this student
         histories = MaintenanceHistory.query.filter_by(user_id=student_id).all()
         result = []
         
         for h in histories:
-            # Tìm tên thiết bị bị hỏng dựa vào devices_id
+            # Find device name based on devices_id
             device = Device.query.get(h.devices_id) if h.devices_id else None
             
-            # Xử lý định dạng ngày tháng từ date_maintenance
-            date_str = "Hôm nay"
+            # Format date from date_maintenance
+            date_str = "Today"
             if h.date_maintenance:
                 date_str = h.date_maintenance.strftime('%d/%m/%Y')
                 
             result.append({
                 "id": h.maintenance_id,
-                "device_name": device.devices_name if device else "Thiết bị không xác định",
-                "description": h.note if h.note else "Không có mô tả",
+                "device_name": device.devices_name if device else "Unknown device",
+                "description": h.note if h.note else "No description provided",
                 "status": h.devices_status if h.devices_status else "pending",
                 "date": date_str
             })
             
-        result.reverse() # Hiển thị báo cáo mới nhất lên đầu
+        result.reverse() # Show latest reports first
         return jsonify(result), 200
     except Exception as e:
-        print("--- LỖI BACKEND GET MAINTENANCE HISTORY ---")
+        print("--- BACKEND ERROR GET MAINTENANCE HISTORY ---")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # =========================================================
-# (ĐÃ FIX TÊN CỘT) TẠO YÊU CẦU BÁO CÁO SỰ CỐ
+# CREATE MAINTENANCE REQUEST
 # =========================================================
 def create_maintenance_request_logic():
     try:
@@ -341,29 +346,29 @@ def create_maintenance_request_logic():
         description = data.get('description')
 
         if not student_id or not device_id or not description:
-            return jsonify({'error': 'Thiếu thông tin bắt buộc!'}), 400
+            return jsonify({'error': 'Missing required information!'}), 400
 
         from app.models.rental_model import MaintenanceHistory
             
-        # Gán chính xác vào các cột của Model MaintenanceHistory
+        # Assign correctly to MaintenanceHistory Model columns
         new_report = MaintenanceHistory(
             user_id=student_id,
-            devices_id=device_id,     # Chú ý chữ 's'
-            note=description,         # Lưu mô tả vào cột note
-            devices_status='pending'  # Gán trạng thái
+            devices_id=device_id,     
+            note=description,         
+            devices_status='pending'  
         )
 
         db.session.add(new_report)
         
-        # Chuyển trạng thái của thiết bị thành "hỏng" (broken)
+        # Change device status to "broken"
         device = Device.query.get(device_id)
         if device:
             device.status = 'broken'
 
         db.session.commit()
-        return jsonify({'message': 'Gửi yêu cầu báo cáo sự cố thành công!'}), 201
+        return jsonify({'message': 'Maintenance request submitted successfully!'}), 201
     except Exception as e:
         db.session.rollback()
-        print("--- LỖI BACKEND CREATE MAINTENANCE ---")
+        print("--- BACKEND ERROR CREATE MAINTENANCE ---")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500

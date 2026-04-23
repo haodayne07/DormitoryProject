@@ -23,7 +23,6 @@ export default function StudentManagement() {
   const [open, setOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // Đã thêm các trường thông tin mới
   const [formData, setFormData] = useState({ 
     user_id: '', username: '', email: '', password: '', 
     full_name: '', phone: '', student_code: '' 
@@ -31,7 +30,6 @@ export default function StudentManagement() {
 
   const API_URL = 'http://127.0.0.1:5000/api/students';
 
-  // HÀM GẮN TOKEN BẢO MẬT
   const getConfig = useCallback(() => {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -45,7 +43,6 @@ export default function StudentManagement() {
 
   useEffect(() => { fetchStudents(); }, [fetchStudents]);
 
-  // Bộ lọc tìm kiếm thông minh hơn
   const filteredStudents = students.filter(s => {
     const term = searchTerm.toLowerCase();
     return (
@@ -81,20 +78,20 @@ export default function StudentManagement() {
     apiCall.then(() => { 
         fetchStudents(); 
         handleCloseModal(); 
-        showToast(isEditMode ? 'Cập nhật thành công!' : 'Tạo mới thành công!', 'success');
+        showToast(isEditMode ? 'Updated successfully!' : 'Created successfully!', 'success');
       })
       .catch(err => {
-        showAlert("Lỗi!", err.response?.data?.error || "Lỗi kết nối", "error");
+        showAlert("Error!", err.response?.data?.error || "Connection error", "error");
       });
   };
 
   const handleDelete = (id) => {
-    showConfirm('Bạn có chắc chắn?', 'Dữ liệu sinh viên này sẽ bị xóa vĩnh viễn!')
+    showConfirm('Are you sure?', 'This student data will be permanently deleted!')
       .then((result) => {
         if (result.isConfirmed) {
           axios.delete(`${API_URL}/${id}`, getConfig())
-            .then(() => { fetchStudents(); showToast('Đã xóa thành công!', 'success'); })
-            .catch(err => { showAlert("Không thể xóa!", err.response?.data?.error, "error"); });
+            .then(() => { fetchStudents(); showToast('Deleted successfully!', 'success'); })
+            .catch(err => { showAlert("Cannot delete!", err.response?.data?.error, "error"); });
         }
       });
   };
@@ -106,17 +103,17 @@ export default function StudentManagement() {
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4 }} spacing={2}>
         <Box>
           <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5 }}>Students List</Typography>
-          <Typography variant="body2" sx={{ color: '#6b7280' }}>Quản lý hồ sơ lưu trú của sinh viên</Typography>
+          <Typography variant="body2" sx={{ color: '#6b7280' }}>Manage student accommodation profiles</Typography>
         </Box>
         
         <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
           <TextField 
-            placeholder="Tìm theo tên, email, MSSV..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ bgcolor: 'white', borderRadius: '12px', '& .MuiOutlinedInput-root': { borderRadius: '12px' }, width: { xs: '100%', sm: '250px' } }}
+            placeholder="Search by name, email, Student ID..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ bgcolor: 'white', borderRadius: '12px', '& .MuiOutlinedInput-root': { borderRadius: '12px' }, width: { xs: '100%', sm: '280px' } }}
             InputProps={{ startAdornment: ( <InputAdornment position="start"> <SearchIcon sx={{ color: '#94a3b8' }} /> </InputAdornment> ) }}
           />
           <Button onClick={() => handleOpenModal()} variant="contained" startIcon={<PersonAddIcon />} sx={{ backgroundColor: '#1e3a8a', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3 }}>
-            Thêm mới
+            Add New
           </Button>
         </Stack>
       </Stack>
@@ -125,15 +122,15 @@ export default function StudentManagement() {
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Hồ sơ Sinh viên</TableCell>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Liên hệ</TableCell>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Phòng</TableCell>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Số dư ví</TableCell>
-              <TableCell align="center" sx={{ fontWeight: '700', color: '#475569' }}>Hành động</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Student Profile</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Contact Info</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Room</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Wallet Balance</TableCell>
+              <TableCell align="center" sx={{ fontWeight: '700', color: '#475569' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Đang tải dữ liệu...</TableCell></TableRow> ) : (
+            {loading ? ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Loading data...</TableCell></TableRow> ) : (
               filteredStudents.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                 <TableRow key={row.user_id} sx={{ '&:hover': { backgroundColor: '#f1f5f9' }, transition: '0.2s' }}>
                   <TableCell>
@@ -143,28 +140,28 @@ export default function StudentManagement() {
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2" fontWeight="700" color="#1e293b">{row.full_name || row.username}</Typography>
-                        <Typography variant="caption" color="#64748b" sx={{ display: 'block' }}>MSSV: {row.student_code || 'Chưa cập nhật'}</Typography>
+                        <Typography variant="caption" color="#64748b" sx={{ display: 'block' }}>Student ID: {row.student_code || 'Not updated'}</Typography>
                       </Box>
                     </Stack>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="#475569">{row.email}</Typography>
-                    <Typography variant="caption" color="#64748b">{row.phone || 'SĐT: N/A'}</Typography>
+                    <Typography variant="caption" color="#64748b">{row.phone || 'Phone: N/A'}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={row.room || 'Chưa xếp'} size="small" sx={{ fontWeight: '600', bgcolor: row.room !== 'Chưa xếp' ? '#f0fdf4' : '#fff7ed', color: row.room !== 'Chưa xếp' ? '#166534' : '#9a3412' }} />
+                    <Chip label={row.room || 'Unassigned'} size="small" sx={{ fontWeight: '600', bgcolor: row.room !== 'Chưa xếp' && row.room !== 'Unassigned' ? '#f0fdf4' : '#fff7ed', color: row.room !== 'Chưa xếp' && row.room !== 'Unassigned' ? '#166534' : '#9a3412' }} />
                   </TableCell>
                   <TableCell sx={{ fontWeight: 'bold', color: '#059669' }}>{formatCurrency(row.balance || 0)}</TableCell>
                   <TableCell align="center">
                     <Stack direction="row" justifyContent="center" spacing={1}>
-                      <Tooltip title="Chỉnh sửa"><IconButton onClick={() => handleOpenModal(row)} sx={{ color: '#2563eb' }}><CiEdit size={22} /></IconButton></Tooltip>
-                      <Tooltip title="Xóa"><IconButton onClick={() => handleDelete(row.user_id)} sx={{ color: '#ef4444' }}><CiTrash size={22} /></IconButton></Tooltip>
+                      <Tooltip title="Edit"><IconButton onClick={() => handleOpenModal(row)} sx={{ color: '#2563eb' }}><CiEdit size={22} /></IconButton></Tooltip>
+                      <Tooltip title="Delete"><IconButton onClick={() => handleDelete(row.user_id)} sx={{ color: '#ef4444' }}><CiTrash size={22} /></IconButton></Tooltip>
                     </Stack>
                   </TableCell>
                 </TableRow>
               ))
             )}
-            {filteredStudents.length === 0 && !loading && ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: '#94a3b8' }}>Không tìm thấy sinh viên nào khớp với từ khóa.</TableCell></TableRow> )}
+            {filteredStudents.length === 0 && !loading && ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: '#94a3b8' }}>No students match the search keyword.</TableCell></TableRow> )}
           </TableBody>
         </Table>
 
@@ -180,24 +177,24 @@ export default function StudentManagement() {
       </TableContainer>
 
       <Dialog open={open} onClose={handleCloseModal} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-        <DialogTitle sx={{ fontWeight: '800', pt: 3, color: '#1e3a8a' }}>{isEditMode ? 'Cập nhật Hồ sơ' : 'Tạo Hồ sơ Sinh viên'}</DialogTitle>
+        <DialogTitle sx={{ fontWeight: '800', pt: 3, color: '#1e3a8a' }}>{isEditMode ? 'Update Profile' : 'Create Student Profile'}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2.5} sx={{ mt: 1 }}>
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="Tên đăng nhập" name="username" value={formData.username} onChange={handleChange} fullWidth disabled={isEditMode} size="small" />
-              {!isEditMode && <TextField label="Mật khẩu" name="password" type="password" value={formData.password} onChange={handleChange} fullWidth size="small" />}
+              <TextField label="Username" name="username" value={formData.username} onChange={handleChange} fullWidth disabled={isEditMode} size="small" />
+              {!isEditMode && <TextField label="Password" name="password" type="password" value={formData.password} onChange={handleChange} fullWidth size="small" />}
             </Box>
-            <TextField label="Họ và tên đầy đủ" name="full_name" value={formData.full_name} onChange={handleChange} fullWidth size="small" />
+            <TextField label="Full Name" name="full_name" value={formData.full_name} onChange={handleChange} fullWidth size="small" />
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField label="Mã sinh viên (MSSV)" name="student_code" value={formData.student_code} onChange={handleChange} fullWidth size="small" />
-              <TextField label="Số điện thoại" name="phone" value={formData.phone} onChange={handleChange} fullWidth size="small" />
+              <TextField label="Student ID" name="student_code" value={formData.student_code} onChange={handleChange} fullWidth size="small" />
+              <TextField label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} fullWidth size="small" />
             </Box>
-            <TextField label="Email liên hệ" name="email" value={formData.email} onChange={handleChange} fullWidth size="small" />
+            <TextField label="Contact Email" name="email" value={formData.email} onChange={handleChange} fullWidth size="small" />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={handleCloseModal} sx={{ color: '#64748b', fontWeight: 'bold' }}>Hủy</Button>
-          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#2563eb', fontWeight: 'bold', px: 3 }}>Lưu Hồ Sơ</Button>
+          <Button onClick={handleCloseModal} sx={{ color: '#64748b', fontWeight: 'bold' }}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#2563eb', fontWeight: 'bold', px: 3 }}>Save Profile</Button>
         </DialogActions>
       </Dialog>
     </Box>

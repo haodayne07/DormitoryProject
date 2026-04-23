@@ -3,7 +3,7 @@ import withReactContent from 'sweetalert2-react-content';
 
 const MySwal = withReactContent(Swal);
 
-// 1. Toast: Thông báo nhỏ hiện ở góc phải
+
 export const showToast = (title, icon = 'success') => {
   return MySwal.fire({
     toast: true,
@@ -21,27 +21,27 @@ export const showToast = (title, icon = 'success') => {
   });
 };
 
-// 2. Confirm: Hộp thoại hỏi Xác nhận (Đã thu nhỏ kích thước)
+
 export const showConfirm = (title, text) => {
   return MySwal.fire({
     title: title,
     text: text,
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#2563eb',
-    cancelButtonColor: '#ef4444',
-    confirmButtonText: 'Đồng ý',
-    cancelButtonText: 'Hủy bỏ',
+    confirmButtonColor: '#5ec95e',
+    cancelButtonColor: '#b13737',
+    confirmButtonText: 'Confirm',
+    cancelButtonText: 'Cancel',
     background: '#ffffff',
-    width: '400px',        // Thu nhỏ chiều rộng hộp thoại
-    padding: '1.5em 1em',  // Căn chỉnh lại khoảng cách trên/dưới và trái/phải
+    width: '400px',        
+    padding: '1.5em 1em',  
     didOpen: () => {
       document.querySelector('.swal2-container').style.setProperty('z-index', '99999', 'important');
     }
   });
 };
 
-// 3. Alert: Hộp thoại thông báo tĩnh (Đã thu nhỏ kích thước)
+
 export const showAlert = (title, text, icon = 'error') => {
   return MySwal.fire({
     title: title,
@@ -49,8 +49,8 @@ export const showAlert = (title, text, icon = 'error') => {
     icon: icon,
     confirmButtonColor: '#2563eb',
     background: '#ffffff',
-    width: '400px',        // Thu nhỏ chiều rộng hộp thoại
-    padding: '1.5em 1em',  // Căn chỉnh lại khoảng cách
+    width: '400px',        
+    padding: '1.5em 1em',  
     didOpen: () => {
       document.querySelector('.swal2-container').style.setProperty('z-index', '99999', 'important');
     }

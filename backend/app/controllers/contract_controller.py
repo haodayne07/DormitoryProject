@@ -1,13 +1,13 @@
 from flask import request, jsonify
 from app.extensions import db
 from app.models.rental_model import Contract, RentalRequest
-from app.models.auth_model import User # ĐÃ FIX: Đổi từ user_model sang auth_model
+from app.models.auth_model import User 
 from app.models.room_model import Room
 from datetime import datetime
 import traceback
 
 # ==========================================
-# PHẦN 1: QUẢN LÝ YÊU CẦU THUÊ PHÒNG (REQUESTS)
+# PART 1: RENTAL REQUESTS MANAGEMENT
 # ==========================================
 
 def get_all_requests_logic():
@@ -24,9 +24,9 @@ def get_all_requests_logic():
             result.append({
                 'request_id': req.request_id,
                 'user_id': req.user_id,
-                'student_name': student.full_name or student.username if student else "Không xác định",
+                'student_name': student.full_name or student.username if student else "Unknown",
                 'room_id': req.room_id,
-                'room_name': room.room_name if room else "Không xác định",
+                'room_name': room.room_name if room else "Unknown",
                 'created_at': req.created_at.strftime('%Y-%m-%d %H:%M') if req.created_at else "",
                 'status': req.status
             })
@@ -41,7 +41,7 @@ def create_request_logic():
         
         existing_req = RentalRequest.query.filter_by(user_id=data['user_id'], room_id=data['room_id'], status='pending').first()
         if existing_req:
-            return jsonify({'error': 'Bạn đã gửi yêu cầu cho phòng này rồi, vui lòng chờ duyệt!'}), 400
+            return jsonify({'error': 'You have already submitted a request for this room. Please wait for approval!'}), 400
             
         new_req = RentalRequest(
             user_id=data['user_id'],
@@ -49,7 +49,7 @@ def create_request_logic():
         )
         db.session.add(new_req)
         db.session.commit()
-        return jsonify({'message': 'Gửi yêu cầu thuê phòng thành công!'}), 201
+        return jsonify({'message': 'Room rental request submitted successfully!'}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
@@ -62,24 +62,24 @@ def process_request_logic(request_id):
         req = RentalRequest.query.get_or_404(request_id)
         
         if req.status != 'pending':
-            return jsonify({'error': 'Yêu cầu này đã được xử lý từ trước!'}), 400
+            return jsonify({'error': 'This request has already been processed!'}), 400
             
         if action == 'reject':
             req.status = 'rejected'
             db.session.commit()
-            return jsonify({'message': 'Đã từ chối yêu cầu thuê phòng!'}), 200
+            return jsonify({'message': 'Room rental request rejected!'}), 200
             
         elif action == 'approve':
-            # BƯỚC 1: KIỂM TRA SỨC CHỨA CỦA PHÒNG TRƯỚC KHI DUYỆT
+            # CHECK ROOM CAPACITY BEFORE APPROVING
             room = Room.query.get(req.room_id)
             if not room:
-                return jsonify({'error': 'Phòng không tồn tại!'}), 404
+                return jsonify({'error': 'Room does not exist!'}), 404
                 
             current_occupancy = Contract.query.filter_by(room_id=room.room_id, status='active').count()
             if current_occupancy >= room.capacity:
-                return jsonify({'error': f'Phòng {room.room_name} đã đầy ({current_occupancy}/{room.capacity}), không thể duyệt thêm!'}), 400
+                return jsonify({'error': f'Room {room.room_name} is full ({current_occupancy}/{room.capacity}), cannot approve more requests!'}), 400
 
-            # BƯỚC 2: NẾU CÒN CHỖ THÌ DUYỆT VÀ TẠO HỢP ĐỒNG
+            # APPROVE AND CREATE CONTRACT IF CAPACITY ALLOWS
             req.status = 'approved'
             start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d').date()
             end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d').date()
@@ -95,9 +95,9 @@ def process_request_logic(request_id):
             db.session.add(new_contract)
             db.session.commit()
             
-            return jsonify({'message': 'Đã duyệt yêu cầu và tạo Hợp đồng thành công!'}), 200
+            return jsonify({'message': 'Request approved and Contract created successfully!'}), 200
             
-        return jsonify({'error': 'Hành động không hợp lệ!'}), 400
+        return jsonify({'error': 'Invalid action!'}), 400
     except Exception as e:
         db.session.rollback()
         traceback.print_exc()
@@ -105,7 +105,7 @@ def process_request_logic(request_id):
 
 
 # ==========================================
-# PHẦN 2: QUẢN LÝ HỢP ĐỒNG (CONTRACTS)
+# PART 2: CONTRACTS MANAGEMENT
 # ==========================================
 
 def get_all_contracts_logic():
@@ -118,9 +118,9 @@ def get_all_contracts_logic():
             result.append({
                 'contract_id': c.contract_id,
                 'user_id': c.user_id,
-                'student_name': student.full_name or student.username if student else "Không xác định",
+                'student_name': student.full_name or student.username if student else "Unknown",
                 'room_id': c.room_id,
-                'room_name': room.room_name if room else "Không xác định",
+                'room_name': room.room_name if room else "Unknown",
                 'start_date': c.start_date.strftime('%Y-%m-%d') if c.start_date else "",
                 'end_date': c.end_date.strftime('%Y-%m-%d') if c.end_date else "",
                 'deposit_amount': float(c.deposit_amount) if c.deposit_amount else 0,

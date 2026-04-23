@@ -10,10 +10,8 @@ class Room(db.Model):
     status = db.Column(db.String(50), default='vacant')
     description = db.Column(db.Text)
     
-    # Cột lưu đường dẫn hình ảnh của Phòng
     image_url = db.Column(db.String(255), nullable=True)
 
-    # Relationships
     contracts = db.relationship('Contract', backref='room', lazy=True)
     devices = db.relationship('Device', backref='room', lazy=True)
     rental_requests = db.relationship('RentalRequest', backref='target_room', lazy=True)
@@ -27,8 +25,8 @@ class Device(db.Model):
     status = db.Column(db.String(50), default='good')
     purchase_date = db.Column(db.Date)
     
-    # THÊM MỚI: Cột lưu đường dẫn hình ảnh của Thiết bị
+   
     image_url = db.Column(db.String(255), nullable=True)
     
-    # Relationships
+
     maintenance_histories = db.relationship('MaintenanceHistory', backref='device', lazy=True)

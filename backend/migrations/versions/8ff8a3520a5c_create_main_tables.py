@@ -1,4 +1,4 @@
-"""Tao bang du lieu chinh thuc
+""" add databaase tables
 
 Revision ID: 8ff8a3520a5c
 Revises: 

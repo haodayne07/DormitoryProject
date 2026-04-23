@@ -26,16 +26,12 @@ export default function ContractManagement() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [formData, setFormData] = useState({ start_date: '', end_date: '', deposit_amount: 0 });
 
-  // ==========================================
-  // HÀM GẮN TOKEN
-  // ==========================================
   const getConfig = useCallback(() => {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
   }, []);
 
   const fetchData = useCallback(() => {
-    // Gọi API kẹp thêm Token
     const reqApi = axios.get('http://127.0.0.1:5000/api/contracts/requests', getConfig());
     const conApi = axios.get('http://127.0.0.1:5000/api/contracts', getConfig());
 
@@ -44,7 +40,7 @@ export default function ContractManagement() {
         setRequests(reqRes.data);
         setContracts(conRes.data);
       })
-      .catch(err => console.error("Lỗi:", err))
+      .catch(err => console.error("Error:", err))
       .finally(() => setLoading(false));
   }, [getConfig]);
 
@@ -71,17 +67,17 @@ export default function ContractManagement() {
 
   const handleApprove = () => {
     axios.put(`http://127.0.0.1:5000/api/contracts/requests/${selectedRequest.request_id}`, { ...formData, action: 'approve' }, getConfig())
-      .then(() => { fetchData(); setOpen(false); showToast('Đã tạo Hợp đồng!', 'success'); })
-      .catch(err => showAlert("Từ chối duyệt!", err.response?.data?.error, "error"));
+      .then(() => { fetchData(); setOpen(false); showToast('Contract created successfully!', 'success'); })
+      .catch(err => showAlert("Approval Rejected!", err.response?.data?.error, "error"));
   };
 
   const handleReject = (reqId) => {
-    showConfirm('Từ chối yêu cầu?', 'Bạn có chắc muốn từ chối sinh viên này không?')
+    showConfirm('Reject Request?', 'Are you sure you want to reject this student?')
       .then((result) => {
         if (result.isConfirmed) {
           axios.put(`http://127.0.0.1:5000/api/contracts/requests/${reqId}`, { action: 'reject' }, getConfig())
-            .then(() => { fetchData(); showToast('Đã từ chối!', 'success'); })
-            .catch(err => showAlert("Lỗi!", err.response?.data?.error, "error"));
+            .then(() => { fetchData(); showToast('Rejected successfully!', 'success'); })
+            .catch(err => showAlert("Error!", err.response?.data?.error, "error"));
         }
       });
   };
@@ -99,7 +95,7 @@ export default function ContractManagement() {
         <Typography variant="h4" fontWeight="900" color="#1e3a8a">Contracts & Requests</Typography>
         
         <TextField 
-            placeholder="Tìm sinh viên, phòng..." 
+            placeholder="Search student, room..." 
             size="small" 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -110,8 +106,8 @@ export default function ContractManagement() {
 
       <Paper sx={{ mb: 3, borderRadius: '16px' }}>
         <Tabs value={tabIndex} onChange={handleTabChange} sx={{ px: 2 }}>
-          <Tab icon={<AssignmentIcon />} iconPosition="start" label={`Yêu cầu (${requests.filter(r => r.status === 'pending').length})`} />
-          <Tab icon={<CheckCircleOutlineIcon />} iconPosition="start" label={`Hợp đồng (${contracts.length})`} />
+          <Tab icon={<AssignmentIcon />} iconPosition="start" label={`Requests (${requests.filter(r => r.status === 'pending').length})`} />
+          <Tab icon={<CheckCircleOutlineIcon />} iconPosition="start" label={`Contracts (${contracts.length})`} />
         </Tabs>
       </Paper>
 
@@ -119,16 +115,16 @@ export default function ContractManagement() {
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ bgcolor: '#f8fafc' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>Sinh viên</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Phòng</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>{tabIndex === 0 ? 'Ngày gửi' : 'Thời hạn'}</TableCell>
-              {tabIndex === 1 && <TableCell sx={{ fontWeight: 'bold' }}>Tiền cọc</TableCell>}
-              <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Hành động</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Room</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{tabIndex === 0 ? 'Submitted Date' : 'Term Duration'}</TableCell>
+              {tabIndex === 1 && <TableCell sx={{ fontWeight: 'bold' }}>Deposit Amount</TableCell>}
+              <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? <TableRow><TableCell colSpan={6} align="center" sx={{ py: 5 }}>Đang tải...</TableCell></TableRow> : 
+            {loading ? <TableRow><TableCell colSpan={6} align="center" sx={{ py: 5 }}>Loading...</TableCell></TableRow> : 
               filteredList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
                 <TableRow key={idx} sx={{ '&:hover': { bgcolor: '#f1f5f9' } }}>
                   <TableCell>
@@ -138,7 +134,7 @@ export default function ContractManagement() {
                     </Stack>
                   </TableCell>
                   <TableCell>{row.room_name}</TableCell>
-                  <TableCell>{tabIndex === 0 ? row.created_at : `${row.start_date} đến ${row.end_date}`}</TableCell>
+                  <TableCell>{tabIndex === 0 ? row.created_at : `${row.start_date} to ${row.end_date}`}</TableCell>
                   
                   {tabIndex === 1 && (
                     <TableCell sx={{ fontWeight: 'bold', color: '#16a34a' }}>
@@ -148,7 +144,7 @@ export default function ContractManagement() {
 
                   <TableCell>
                     <Chip 
-                      label={row.status === 'pending' ? 'Chờ duyệt' : row.status === 'rejected' ? 'Từ chối' : row.status === 'active' ? 'Đang hiệu lực' : row.status} 
+                      label={row.status === 'pending' ? 'Pending' : row.status === 'rejected' ? 'Rejected' : row.status === 'active' ? 'Active' : row.status} 
                       size="small" 
                       color={
                         row.status === 'pending' ? 'warning' : 
@@ -161,8 +157,8 @@ export default function ContractManagement() {
                   <TableCell align="center">
                     {tabIndex === 0 && row.status === 'pending' && (
                       <Stack direction="row" spacing={1} justifyContent="center">
-                        <IconButton onClick={() => handleOpenApproveModal(row)} color="success"><CheckCircleOutlineIcon /></IconButton>
-                        <IconButton onClick={() => handleReject(row.request_id)} color="error"><HighlightOffIcon /></IconButton>
+                        <Tooltip title="Approve"><IconButton onClick={() => handleOpenApproveModal(row)} color="success"><CheckCircleOutlineIcon /></IconButton></Tooltip>
+                        <Tooltip title="Reject"><IconButton onClick={() => handleReject(row.request_id)} color="error"><HighlightOffIcon /></IconButton></Tooltip>
                       </Stack>
                     )}
                   </TableCell>
@@ -193,17 +189,17 @@ export default function ContractManagement() {
       </TableContainer>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '15px' } }}>
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Duyệt Hợp đồng</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Approve Contract</DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 1 }}>
-            <TextField label="Bắt đầu" name="start_date" type="date" value={formData.start_date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} />
-            <TextField label="Kết thúc" name="end_date" type="date" value={formData.end_date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} />
-            <TextField label="Tiền cọc" name="deposit_amount" type="number" value={formData.deposit_amount} onChange={handleChange} fullWidth />
+            <TextField label="Start Date" name="start_date" type="date" value={formData.start_date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} />
+            <TextField label="End Date" name="end_date" type="date" value={formData.end_date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} />
+            <TextField label="Deposit Amount" name="deposit_amount" type="number" value={formData.deposit_amount} onChange={handleChange} fullWidth />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setOpen(false)}>Hủy</Button>
-          <Button onClick={handleApprove} variant="contained" color="success">Xác nhận Duyệt</Button>
+          <Button onClick={() => setOpen(false)} sx={{ color: '#64748b', fontWeight: 'bold' }}>Cancel</Button>
+          <Button onClick={handleApprove} variant="contained" color="success" sx={{ fontWeight: 'bold' }}>Confirm Approval</Button>
         </DialogActions>
       </Dialog>
     </Box>

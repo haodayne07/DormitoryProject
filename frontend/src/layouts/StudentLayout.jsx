@@ -15,42 +15,39 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 const drawerWidth = 260;
-const collapsedWidth = 84; // Chiều rộng khi thu gọn Menu
+const collapsedWidth = 84; 
 
 export default function StudentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Quản lý trạng thái mở/đóng của 2 loại màn hình
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopOpen, setDesktopOpen] = useState(true);
 
   const handleMobileToggle = () => setMobileOpen(!mobileOpen);
   const handleDesktopToggle = () => setDesktopOpen(!desktopOpen);
 
-  // Tính toán chiều rộng hiện tại dựa trên trạng thái
   const currentWidth = desktopOpen ? drawerWidth : collapsedWidth;
 
+
   const menuItems = [
-    { text: 'Trang chủ', icon: <DashboardIcon />, path: '/student/dashboard' },
-    { text: 'Phòng của tôi', icon: <HotelIcon />, path: '/student/room' },
-    { text: 'Hóa đơn & Thanh toán', icon: <ReceiptLongIcon />, path: '/student/payments' },
-    { text: 'Báo cáo sự cố', icon: <BuildCircleIcon />, path: '/student/maintenance' },
-    { text: 'Bảng tin', icon: <CampaignIcon />, path: '/student/events' },
+    { text: 'Dashboard', icon: <DashboardIcon />, path: '/student/dashboard' },
+    { text: 'My Room', icon: <HotelIcon />, path: '/student/room' },
+    { text: 'Bills & Payments', icon: <ReceiptLongIcon />, path: '/student/payments' },
+    { text: 'Maintenance', icon: <BuildCircleIcon />, path: '/student/maintenance' },
+    { text: 'Newsboard', icon: <CampaignIcon />, path: '/student/events' },
   ];
 
-  // Hàm render nội dung Sidebar (Dùng chung cho cả Mobile và Desktop)
   const renderDrawerContent = (isExpanded) => (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#1c3d8c', color: 'white', overflowX: 'hidden' }}>
       
-      {/* HEADER CỦA SIDEBAR - ĐÃ ĐƯỢC CẬP NHẬT */}
       <Box sx={{ 
         p: isExpanded ? 3 : 2, 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: isExpanded ? 'space-between' : 'center', 
         transition: 'all 0.3s',
-        minHeight: '80px' // Đảm bảo header luôn có độ cao cố định cho đẹp
+        minHeight: '80px' 
       }}>
         {isExpanded ? (
           <>
@@ -61,7 +58,6 @@ export default function StudentLayout() {
                 <Typography variant="caption" sx={{ color: '#cbd5e1' }}>Student Portal</Typography>
               </Box>
             </Box>
-            {/* Nút mũi tên thu gọn */}
             <IconButton 
               onClick={handleDesktopToggle} 
               sx={{ color: '#cbd5e1', '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.1)' }, display: { xs: 'none', sm: 'flex' } }}
@@ -70,7 +66,6 @@ export default function StudentLayout() {
             </IconButton>
           </>
         ) : (
-          // Nút Hamburger hiển thị khi Sidebar bị thu nhỏ (căn giữa)
           <IconButton 
             onClick={handleDesktopToggle} 
             sx={{ color: '#cbd5e1', '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.1)' }, display: { xs: 'none', sm: 'flex' } }}
@@ -80,7 +75,6 @@ export default function StudentLayout() {
         )}
       </Box>
 
-      {/* DANH SÁCH MENU */}
       <List sx={{ px: isExpanded ? 2 : 1.5, flexGrow: 1, mt: 1 }}>
         {menuItems.map((item) => {
           const isActive = location.pathname.includes(item.path);
@@ -116,12 +110,11 @@ export default function StudentLayout() {
         })}
       </List>
 
-     {/* NÚT LOGOUT */}
       <Box sx={{ p: isExpanded ? 2 : 1.5 }}>
-        <Tooltip title={!isExpanded ? "Đăng xuất" : ""} placement="right" arrow>
+        {/* ĐÃ DỊCH TOOLTIP ĐĂNG XUẤT */}
+        <Tooltip title={!isExpanded ? "Logout" : ""} placement="right" arrow>
           <ListItem 
             button 
-            // CẬP NHẬT ONCLICK ĐỂ XÓA TOKEN
             onClick={() => {
               localStorage.removeItem('token');
               localStorage.removeItem('role');
@@ -153,7 +146,6 @@ export default function StudentLayout() {
   return (
     <Box sx={{ display: 'flex', bgcolor: '#f8fafc', minHeight: '100vh' }}>
       
-      {/* HEADER CỦA TRANG (AppBar) */}
       <AppBar 
         position="fixed" 
         sx={{ 
@@ -166,25 +158,21 @@ export default function StudentLayout() {
         }}
       >
         <Toolbar>
-          {/* Nút Menu cho màn hình Mobile (Vẫn giữ trên AppBar vì trên điện thoại Sidebar bị giấu đi) */}
           <IconButton color="inherit" edge="start" onClick={handleMobileToggle} sx={{ mr: 2, display: { sm: 'none' }, color: '#1e293b' }}>
             <MenuIcon />
           </IconButton>
 
-          {/* ĐÃ XÓA NÚT MENU DESKTOP Ở ĐÂY VÌ ĐÃ CHUYỂN VÀO TRONG SIDEBAR */}
-
           <Box sx={{ flexGrow: 1 }} />
           <Stack direction="row" spacing={2} alignItems="center">
             <IconButton sx={{ color: '#64748b' }}><NotificationsIcon /></IconButton>
-            <Avatar sx={{ width: 35, height: 35, bgcolor: '#e2e8f0', color: '#1e293b', fontSize: '14px', fontWeight: 'bold' }}>SV</Avatar>
+            {}
+            <Avatar sx={{ width: 35, height: 35, bgcolor: '#e2e8f0', color: '#1e293b', fontSize: '14px', fontWeight: 'bold' }}>ST</Avatar>
           </Stack>
         </Toolbar>
       </AppBar>
 
-      {/* KHU VỰC CHỨA SIDEBAR */}
       <Box component="nav" sx={{ width: { sm: currentWidth }, flexShrink: { sm: 0 }, transition: 'width 0.3s' }}>
         
-        {/* Bản Mobile */}
         <Drawer 
           variant="temporary" 
           open={mobileOpen} 
@@ -195,7 +183,6 @@ export default function StudentLayout() {
           {renderDrawerContent(true)}
         </Drawer>
 
-        {/* Bản Desktop */}
         <Drawer 
           variant="permanent" 
           sx={{ 
@@ -208,7 +195,6 @@ export default function StudentLayout() {
         </Drawer>
       </Box>
 
-      {/* KHU VỰC NỘI DUNG CHÍNH (Dashboard) */}
       <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 4 }, width: { sm: `calc(100% - ${currentWidth}px)` }, mt: 7, transition: 'width 0.3s' }}>
         <Outlet />
       </Box>

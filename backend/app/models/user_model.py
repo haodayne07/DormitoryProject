@@ -11,16 +11,7 @@ class User(db.Model):
     phone = db.Column(db.String(15))
     email = db.Column(db.String(100), unique=True)
     
-    # ==========================================
-    # CODE CŨ (Được giữ lại theo yêu cầu của bạn)
-    # ==========================================
-    # contracts = db.relationship('Contract', backref='student', lazy=True)
-    # rental_requests = db.relationship('RentalRequest', backref='requester', lazy=True)
-    # maintenance_histories = db.relationship('MaintenanceHistory', backref='reporter', lazy=True)
-
-    # ==========================================
-    # CODE MỚI (Đã thêm explicit foreign_keys để fix lỗi)
-    # ==========================================
+  
     contracts = db.relationship('Contract', backref='student', lazy=True, foreign_keys='Contract.user_id')
     rental_requests = db.relationship('RentalRequest', backref='requester', lazy=True, foreign_keys='RentalRequest.user_id')
     maintenance_histories = db.relationship('MaintenanceHistory', backref='reporter', lazy=True, foreign_keys='MaintenanceHistory.user_id')

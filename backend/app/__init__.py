@@ -18,9 +18,6 @@ def create_app():
     app = Flask(__name__, static_folder='../static', static_url_path='/static')
     app.config.from_object('app.config.Config')
 
-    # ==========================================
-    # CẤU HÌNH CORS CHUẨN XÁC VÀ DUY NHẤT
-    # ==========================================
     CORS(app, resources={
         r"/api/*": {
             "origins": ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"],
@@ -33,7 +30,6 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    # QUAN TRỌNG: Đã xóa dòng cors.init_app(app) cũ để tránh xung đột
 
     scheduler.init_app(app)
     scheduler.start()
@@ -57,7 +53,7 @@ def create_app():
         except Exception as e:
             pass
 
-    # ĐĂNG KÝ CÁC BLUEPRINT (Giữ nguyên y hệt của bạn)
+   
     app.register_blueprint(contract_bp, url_prefix='/api/contracts')
     app.register_blueprint(event_bp, url_prefix='/api/events')
     app.register_blueprint(setting_bp, url_prefix='/api/settings')

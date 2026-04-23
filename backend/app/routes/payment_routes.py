@@ -13,9 +13,6 @@ from app.controllers.payment_controller import (
 
 payment_bp = Blueprint('payment', __name__)
 
-# ==========================================
-# CÁC ROUTE CỦA ADMIN (YÊU CẦU TOKEN VÀ XỬ LÝ CORS)
-# ==========================================
 @payment_bp.route('/bills', methods=['GET', 'OPTIONS'], strict_slashes=False)
 @require_role('admin', 'staff')
 def handle_get_bills():
@@ -46,9 +43,6 @@ def handle_auto_generate():
     if request.method == 'OPTIONS': return jsonify({'status': 'ok'}), 200
     return auto_generate_bills_api_logic()
 
-# ==========================================
-# CÁC ROUTE CỦA MOMO (KHÔNG CẦN TOKEN ĐỂ MOMO GỌI VÀO ĐƯỢC)
-# ==========================================
 @payment_bp.route('/create_momo_payment', methods=['POST', 'OPTIONS'], strict_slashes=False)
 def handle_create_momo():
     if request.method == 'OPTIONS': return jsonify({'status': 'ok'}), 200

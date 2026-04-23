@@ -19,14 +19,13 @@ export default function Login() {
         localStorage.setItem('role', role);
         localStorage.setItem('user_id', user_id);
 
-        // Đã dịch sang tiếng Anh
+      
         showToast(`Welcome back, ${formData.username}!`, 'success');
         
         if (role === 'admin') navigate('/admin');
         else navigate('/student/dashboard');
       })
       .catch(err => {
-        // Đã dịch sang tiếng Anh
         showToast(err.response?.data?.message || 'Login failed', 'error');
       });
   };

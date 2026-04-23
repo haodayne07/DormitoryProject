@@ -31,7 +31,6 @@ export default function PaymentManagement() {
     contract_id: '', title: '', amount: '', due_date: ''
   });
 
-  // HÀM GẮN TOKEN BẢO MẬT
   const getConfig = useCallback(() => {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -46,7 +45,7 @@ export default function PaymentManagement() {
         setBills(billsRes.data);
         setHistory(historyRes.data);
       })
-      .catch(err => console.error("Lỗi tải dữ liệu thanh toán:", err))
+      .catch(err => console.error("Error loading payment data:", err))
       .finally(() => setLoading(false));
   }, [getConfig]);
 
@@ -60,16 +59,16 @@ export default function PaymentManagement() {
   
   const handlePayBill = (bill) => {
     showConfirm(
-      'Xác nhận thu tiền?', 
-      `Sinh viên ${bill.student_name} đã thanh toán ${formatCurrency(bill.amount)}?`
+      'Confirm Payment?', 
+      `Did student ${bill.student_name} pay ${formatCurrency(bill.amount)}?`
     ).then((result) => {
       if (result.isConfirmed) {
-        axios.post(`http://127.0.0.1:5000/api/payments/bills/${bill.bill_id}/pay`, { method: 'Tiền mặt' }, getConfig())
+        axios.post(`http://127.0.0.1:5000/api/payments/bills/${bill.bill_id}/pay`, { method: 'Cash' }, getConfig())
           .then(() => {
             fetchData();
-            showToast('Đã ghi nhận thanh toán thành công!', 'success');
+            showToast('Payment recorded successfully!', 'success');
           })
-          .catch(err => showAlert("Lỗi!", err.response?.data?.error, "error"));
+          .catch(err => showAlert("Error!", err.response?.data?.error, "error"));
       }
     });
   };
@@ -85,13 +84,13 @@ export default function PaymentManagement() {
         const currentMonthStr = `${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
         
         setBillForm({
-          contract_id: '', title: `Tien phong KTX thang ${currentMonthStr}`, amount: '', due_date: nextMonth.toISOString().split('T')[0]
+          contract_id: '', title: `Dormitory Fee Month ${currentMonthStr}`, amount: '', due_date: nextMonth.toISOString().split('T')[0]
         });
         setOpenModal(true);
       })
       .catch(err => {
-        console.error("Lỗi lấy danh sách hợp đồng:", err);
-        showAlert("Lỗi", "Không thể tải danh sách hợp đồng", "error");
+        console.error("Error loading contract list:", err);
+        showAlert("Error", "Cannot load contract list", "error");
       });
   };
 
@@ -104,26 +103,24 @@ export default function PaymentManagement() {
 
   const handleSubmitSingleBill = () => {
     if (!billForm.contract_id || !billForm.amount) {
-      showToast('Vui lòng điền đủ thông tin!', 'warning');
+      showToast('Please fill in all fields!', 'warning');
       return;
     }
-    // Đã đổi URL về /api/payments/create cho khớp Blueprint
     axios.post('http://127.0.0.1:5000/api/payments/create', billForm, getConfig())
       .then(() => {
-        showToast('Tạo hóa đơn thành công!', 'success');
+        showToast('Bill created successfully!', 'success');
         setOpenModal(false);
         fetchData();
       })
-      .catch(() => showAlert("Lỗi!", "Không thể tạo hóa đơn, có thể do trùng lặp", "error"));
+      .catch(() => showAlert("Error!", "Cannot create bill, possibly a duplicate", "error"));
   };
 
   const handleBulkCreate = () => {
     showConfirm(
-      'Phát hành hàng loạt?', 
-      'Hệ thống sẽ quét toàn bộ hợp đồng Active và tạo hóa đơn. Nếu sinh viên đã có hóa đơn tháng này, hệ thống sẽ tự động bỏ qua để chống trùng lặp.'
+      'Bulk Issue Bills?', 
+      'The system will scan all Active contracts and generate bills. If a student already has a bill for this month, it will be skipped to prevent duplicates.'
     ).then(result => {
         if(result.isConfirmed) {
-          // Đã đổi URL về /api/payments/auto-generate cho khớp Blueprint
           axios.post('http://127.0.0.1:5000/api/payments/auto-generate', {}, getConfig())
             .then((res) => {
               showToast(res.data.message, 'success');
@@ -131,7 +128,7 @@ export default function PaymentManagement() {
             })
             .catch(err => {
               console.error(err);
-              showAlert("Lỗi!", err.response?.data?.error || "Có lỗi xảy ra khi phát hành hàng loạt", "error");
+              showAlert("Error!", err.response?.data?.error || "An error occurred during bulk issue", "error");
             });
         }
       });
@@ -148,24 +145,24 @@ export default function PaymentManagement() {
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 3 }} spacing={2}>
         <Box>
           <Typography variant="h4" fontWeight="900" color="#1e3a8a" gutterBottom>Payments & Bills</Typography>
-          <Typography variant="body2" sx={{ color: '#6b7280' }}>Quản lý hóa đơn và theo dõi doanh thu hàng tháng</Typography>
+          <Typography variant="body2" sx={{ color: '#6b7280' }}>Manage bills and track monthly revenue</Typography>
         </Box>
         
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
           <TextField 
-              placeholder="Tìm sinh viên, phòng..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search student, room..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#64748b' }}/></InputAdornment> }}
               sx={{ width: { xs: '100%', sm: '250px' }, bgcolor: 'white', '& .MuiOutlinedInput-root': { borderRadius: '12px', '& fieldset': { borderColor: '#cbd5e1', borderWidth: '1.5px' }, '&:hover fieldset': { borderColor: '#1c3d8c' }, '&.Mui-focused fieldset': { borderColor: '#1c3d8c', borderWidth: '2px' }, } }}
           />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal} sx={{ bgcolor: '#1c3d8c', borderRadius: '10px', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#152d69' } }}> Tạo hóa đơn </Button>
-          <Button variant="contained" startIcon={<BoltIcon />} onClick={handleBulkCreate} sx={{ bgcolor: '#ea580c', borderRadius: '10px', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#c2410c' } }}> Phát hành hàng loạt </Button>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal} sx={{ bgcolor: '#1c3d8c', borderRadius: '10px', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#152d69' } }}> Create Bill </Button>
+          <Button variant="contained" startIcon={<BoltIcon />} onClick={handleBulkCreate} sx={{ bgcolor: '#ea580c', borderRadius: '10px', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#c2410c' } }}> Bulk Issue </Button>
         </Stack>
       </Stack>
 
       <Paper sx={{ mb: 3, borderRadius: '16px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)' }}>
         <Tabs value={tabIndex} onChange={handleTabChange} sx={{ px: 2, '& .MuiTab-root': { fontWeight: 'bold', textTransform: 'none' }}}>
-          <Tab icon={<ReceiptIcon sx={{ mr: 1 }}/>} iconPosition="start" label={`Hóa đơn cần thu (${bills.filter(b => b.status === 'unpaid').length})`} />
-          <Tab icon={<HistoryIcon sx={{ mr: 1 }}/>} iconPosition="start" label="Lịch sử doanh thu" />
+          <Tab icon={<ReceiptIcon sx={{ mr: 1 }}/>} iconPosition="start" label={`Pending Bills (${bills.filter(b => b.status === 'unpaid').length})`} />
+          <Tab icon={<HistoryIcon sx={{ mr: 1 }}/>} iconPosition="start" label="Revenue History" />
         </Tabs>
       </Paper>
 
@@ -173,23 +170,23 @@ export default function PaymentManagement() {
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ bgcolor: '#f8fafc' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>Sinh viên</TableCell>
-              {tabIndex === 0 && <TableCell sx={{ fontWeight: 'bold' }}>Phòng</TableCell>}
-              <TableCell sx={{ fontWeight: 'bold' }}>Nội dung</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>{tabIndex === 0 ? 'Hạn đóng' : 'Ngày thu'}</TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>Số tiền</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
+              {tabIndex === 0 && <TableCell sx={{ fontWeight: 'bold' }}>Room</TableCell>}
+              <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{tabIndex === 0 ? 'Due Date' : 'Payment Date'}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>Amount</TableCell>
               {tabIndex === 0 ? (
                 <>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Trạng thái</TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Thao tác</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 'bold' }}>Actions</TableCell>
                 </>
               ) : (
-                <TableCell sx={{ fontWeight: 'bold' }}>Hình thức</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Method</TableCell>
               )}
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? <TableRow><TableCell colSpan={7} align="center" sx={{ py: 8 }}>Đang tải dữ liệu...</TableCell></TableRow> : 
+            {loading ? <TableRow><TableCell colSpan={7} align="center" sx={{ py: 8 }}>Loading data...</TableCell></TableRow> : 
               filteredList.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, idx) => (
                 <TableRow key={idx} sx={{ '&:hover': { bgcolor: '#f1f5f9' }, transition: '0.2s' }}>
                   <TableCell>
@@ -205,13 +202,13 @@ export default function PaymentManagement() {
                   {tabIndex === 0 ? (
                     <>
                       <TableCell>
-                        <Chip label={row.status === 'unpaid' ? 'Chưa đóng' : 'Đã đóng'} size="small" color={row.status === 'unpaid' ? 'error' : 'success'} sx={{ fontWeight: 'bold' }}/>
+                        <Chip label={row.status === 'unpaid' ? 'Unpaid' : 'Paid'} size="small" color={row.status === 'unpaid' ? 'error' : 'success'} sx={{ fontWeight: 'bold' }}/>
                       </TableCell>
                       <TableCell align="center">
                         {row.status === 'unpaid' ? (
-                          <Button variant="contained" size="small" startIcon={<CheckCircleIcon />} onClick={() => handlePayBill(row)} sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, borderRadius: '8px' }}> Thu tiền </Button>
+                          <Button variant="contained" size="small" startIcon={<CheckCircleIcon />} onClick={() => handlePayBill(row)} sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, borderRadius: '8px' }}> Collect </Button>
                         ) : (
-                          <Typography variant="caption" color="success.main" fontWeight="bold">Hoàn tất</Typography>
+                          <Typography variant="caption" color="success.main" fontWeight="bold">Completed</Typography>
                         )}
                       </TableCell>
                     </>
@@ -230,25 +227,25 @@ export default function PaymentManagement() {
       </TableContainer>
 
       <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Tạo Hóa Đơn Mới</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Create New Bill</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={3} sx={{ mt: 1 }}>
             <FormControl fullWidth size="small">
-              <InputLabel>Chọn Sinh Viên (Hợp đồng Active)</InputLabel>
-              <Select value={billForm.contract_id} label="Chọn Sinh Viên (Hợp đồng Active)" onChange={handleContractChange}>
+              <InputLabel>Select Student (Active Contract)</InputLabel>
+              <Select value={billForm.contract_id} label="Select Student (Active Contract)" onChange={handleContractChange}>
                 {activeContracts.map(c => (
-                  <MenuItem key={c.contract_id || c.id} value={c.contract_id || c.id}> {c.user?.full_name || c.student_name || 'Sinh viên'} - Phòng {c.room?.room_name || c.room_name || 'N/A'} </MenuItem>
+                  <MenuItem key={c.contract_id || c.id} value={c.contract_id || c.id}> {c.user?.full_name || c.student_name || 'Student'} - Room {c.room?.room_name || c.room_name || 'N/A'} </MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <TextField label="Nội dung hóa đơn" size="small" fullWidth value={billForm.title} onChange={(e) => setBillForm({ ...billForm, title: e.target.value })} />
-            <TextField label="Số tiền (VNĐ)" type="number" size="small" fullWidth value={billForm.amount} onChange={(e) => setBillForm({ ...billForm, amount: e.target.value })} />
-            <TextField label="Hạn thanh toán" type="date" size="small" fullWidth InputLabelProps={{ shrink: true }} value={billForm.due_date} onChange={(e) => setBillForm({ ...billForm, due_date: e.target.value })} />
+            <TextField label="Description" size="small" fullWidth value={billForm.title} onChange={(e) => setBillForm({ ...billForm, title: e.target.value })} />
+            <TextField label="Amount (VND)" type="number" size="small" fullWidth value={billForm.amount} onChange={(e) => setBillForm({ ...billForm, amount: e.target.value })} />
+            <TextField label="Due Date" type="date" size="small" fullWidth InputLabelProps={{ shrink: true }} value={billForm.due_date} onChange={(e) => setBillForm({ ...billForm, due_date: e.target.value })} />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setOpenModal(false)} color="inherit">Hủy</Button>
-          <Button onClick={handleSubmitSingleBill} variant="contained" sx={{ bgcolor: '#1c3d8c' }}> Tạo Hóa Đơn </Button>
+          <Button onClick={() => setOpenModal(false)} color="inherit">Cancel</Button>
+          <Button onClick={handleSubmitSingleBill} variant="contained" sx={{ bgcolor: '#1c3d8c' }}> Create Bill </Button>
         </DialogActions>
       </Dialog>
     </Box>

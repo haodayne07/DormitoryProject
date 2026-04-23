@@ -6,24 +6,24 @@ from app.extensions import db
 from datetime import datetime
 import traceback
 
-# Cấu hình thư mục lưu ảnh phòng và thiết bị
+# Configure upload folders for rooms and devices
 UPLOAD_FOLDER = 'static/uploads/rooms'
 DEVICE_UPLOAD_FOLDER = 'static/uploads/devices'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True) 
-os.makedirs(DEVICE_UPLOAD_FOLDER, exist_ok=True) # Tự động tạo thư mục ảnh thiết bị
+os.makedirs(DEVICE_UPLOAD_FOLDER, exist_ok=True) 
 
 # ==========================================
-# PHẦN 1: QUẢN LÝ THIẾT BỊ (NÂNG CẤP FULL CRUD + UPLOAD ẢNH)
+# PART 1: DEVICE MANAGEMENT (FULL CRUD + IMAGE UPLOAD)
 # ==========================================
 
-# 1. GET ALL: Lấy toàn bộ danh sách thiết bị
+# 1. GET ALL: Fetch all devices
 def get_all_devices_logic():
     try:
         devices = Device.query.all()
         result = []
         for d in devices:
-            # Lấy tên phòng từ relationship
-            room_name = d.room.room_name if d.room else "Không xác định"
+            # Get room name from relationship
+            room_name = d.room.room_name if d.room else "Unknown"
             result.append({
                 'devices_id': d.devices_id,
                 'room_id': d.room_id,
@@ -38,12 +38,12 @@ def get_all_devices_logic():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-# 2. CREATE: Thêm thiết bị (Nâng cấp nhận Form Data và File ảnh)
+# 2. CREATE: Add a device (Supports Form Data and Image File)
 def add_device_logic():
     try:
         data = request.form
         
-        # Xử lý upload ảnh thiết bị
+        # Process device image upload
         image_url = ""
         if 'image' in request.files:
             file = request.files['image']
@@ -54,7 +54,7 @@ def add_device_logic():
                 file.save(filepath)
                 image_url = f"/{filepath}"
 
-        # Xử lý ngày tháng
+        # Process date
         p_date = None
         if data.get('purchase_date'):
             p_date = datetime.strptime(data.get('purchase_date'), '%Y-%m-%d').date()
@@ -68,12 +68,12 @@ def add_device_logic():
         )
         db.session.add(new_device)
         db.session.commit()
-        return jsonify({'message': 'Thêm thiết bị thành công!'}), 201
+        return jsonify({'message': 'Device added successfully!'}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-# 3. UPDATE FULL: Cập nhật thông tin & ảnh thiết bị
+# 3. UPDATE FULL: Update device information & image
 def update_device_logic(device_id):
     try:
         device = Device.query.get_or_404(device_id)
@@ -86,7 +86,7 @@ def update_device_logic(device_id):
         if data.get('purchase_date'):
             device.purchase_date = datetime.strptime(data.get('purchase_date'), '%Y-%m-%d').date()
 
-        # Xử lý upload ảnh mới
+        # Process new image upload
         if 'image' in request.files:
             file = request.files['image']
             if file.filename != '':
@@ -97,33 +97,33 @@ def update_device_logic(device_id):
                 device.image_url = f"/{filepath}"
 
         db.session.commit()
-        return jsonify({'message': 'Cập nhật thiết bị thành công!'}), 200
+        return jsonify({'message': 'Device updated successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-# 4. DELETE: Xóa thiết bị
+# 4. DELETE: Remove a device
 def delete_device_logic(device_id):
     try:
         device = Device.query.get_or_404(device_id)
         db.session.delete(device)
         db.session.commit()
-        return jsonify({'message': 'Xóa thiết bị thành công!'}), 200
+        return jsonify({'message': 'Device deleted successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
 
-# 5. GIỮ NGUYÊN CODE CŨ: Cập nhật nhanh trạng thái thiết bị (Dùng JSON)
+# 5. Quick Update Device Status (JSON payload)
 def update_device_status_logic(device_id):
     data = request.get_json()
     device = Device.query.get_or_404(device_id)
     device.status = data.get('status', device.status)
     db.session.commit()
-    return jsonify({'message': 'Cập nhật trạng thái thiết bị thành công!'}), 200
+    return jsonify({'message': 'Device status updated successfully!'}), 200
 
 
 # ==========================================
-# PHẦN 2: QUẢN LÝ PHÒNG (GIỮ NGUYÊN)
+# PART 2: ROOM MANAGEMENT
 # ==========================================
 def get_all_rooms_logic():
     try:
@@ -151,7 +151,7 @@ def add_room_logic():
         data = request.form 
         
         if Room.query.filter_by(room_name=data.get('room_name')).first():
-            return jsonify({'error': f"Tên phòng '{data.get('room_name')}' đã tồn tại!"}), 400
+            return jsonify({'error': f"Room name '{data.get('room_name')}' already exists!"}), 400
             
         image_url = ""
         if 'image' in request.files:
@@ -173,7 +173,7 @@ def add_room_logic():
         )
         db.session.add(new_room)
         db.session.commit()
-        return jsonify({'message': 'Thêm phòng thành công!'}), 201
+        return jsonify({'message': 'Room added successfully!'}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
@@ -185,7 +185,7 @@ def update_room_logic(room_id):
         
         if 'room_name' in data and data.get('room_name') != room.room_name:
             if Room.query.filter_by(room_name=data.get('room_name')).first():
-                return jsonify({'error': f"Tên phòng '{data.get('room_name')}' đã được sử dụng!"}), 400
+                return jsonify({'error': f"Room name '{data.get('room_name')}' is already in use!"}), 400
             room.room_name = data.get('room_name')
             
         if 'capacity' in data: room.capacity = data.get('capacity')
@@ -203,7 +203,7 @@ def update_room_logic(room_id):
                 room.image_url = f"/{filepath}"
         
         db.session.commit()
-        return jsonify({'message': 'Cập nhật phòng thành công!'}), 200
+        return jsonify({'message': 'Room updated successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
@@ -213,17 +213,17 @@ def delete_room_logic(room_id):
         room = Room.query.get_or_404(room_id)
         active_contracts = [c for c in room.contracts if c.status == 'active'] if hasattr(room, 'contracts') else []
         if len(active_contracts) > 0:
-            return jsonify({'error': 'Không thể xóa phòng đang có sinh viên lưu trú!'}), 400
+            return jsonify({'error': 'Cannot delete a room with active residents!'}), 400
             
         db.session.delete(room)
         db.session.commit()
-        return jsonify({'message': 'Xóa phòng thành công!'}), 200
+        return jsonify({'message': 'Room deleted successfully!'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Không thể xóa phòng do vẫn còn thiết bị hoặc dữ liệu liên quan!'}), 400
+        return jsonify({'error': 'Cannot delete room due to existing devices or related data!'}), 400
 
 # ==========================================
-# PHẦN 3: CÁC API KHÁC (GIỮ NGUYÊN)
+# PART 3: OTHER APIs
 # ==========================================
 def get_vacant_rooms_logic():
     rooms = Room.query.filter_by(status='vacant').all()

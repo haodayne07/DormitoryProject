@@ -9,7 +9,7 @@ admin_bp = Blueprint('admin', __name__)
 admin_bp.route('/stats', methods=['GET'])(get_occupancy_stats_logic)
 admin_bp.route('/revenue', methods=['GET'])(get_revenue_report_logic)
 
-# ĐÃ THÊM OPTIONS VÀ REQUIRE_ROLE
+
 @admin_bp.route('/staff', methods=['GET', 'POST', 'OPTIONS'], strict_slashes=False)
 @require_role('admin')
 def handle_staff():
@@ -17,7 +17,6 @@ def handle_staff():
     if request.method == 'POST': return create_staff_logic()
     return get_all_staff_logic()
 
-# ĐÃ THÊM OPTIONS VÀ REQUIRE_ROLE
 @admin_bp.route('/staff/<int:staff_id>', methods=['PUT', 'DELETE', 'OPTIONS'], strict_slashes=False)
 @require_role('admin')
 def handle_single_staff(staff_id):

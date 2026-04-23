@@ -11,3 +11,4 @@ __pycache__/
 
 # Bỏ qua file rác Mac
 .DS_Store
+Sitemap.md

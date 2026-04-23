@@ -34,9 +34,6 @@ export default function RoomManagement() {
 
   const API_URL = 'http://127.0.0.1:5000/api/rooms';
 
-  // ==========================================
-  // HÀM GẮN TOKEN VÀ FILE ẢNH
-  // ==========================================
   const getConfig = useCallback((isMultipart = false) => {
     const token = localStorage.getItem('token');
     return {
@@ -103,7 +100,6 @@ export default function RoomManagement() {
         dataToSend.append('image', imageFile);
     }
 
-    // ĐÃ CHUẨN HÓA: Dùng API_URL và getConfig(true)
     const apiCall = isEditMode 
       ? axios.put(`${API_URL}/${formData.room_id}`, dataToSend, getConfig(true))
       : axios.post(API_URL, dataToSend, getConfig(true));
@@ -111,20 +107,20 @@ export default function RoomManagement() {
     apiCall.then(() => { 
         fetchRooms(); 
         handleCloseModal(); 
-        showToast(isEditMode ? 'Cập nhật phòng thành công!' : 'Đã thêm phòng mới!', 'success');
+        showToast(isEditMode ? 'Room updated successfully!' : 'New room added!', 'success');
       })
       .catch(err => {
-        showAlert("Lỗi!", err.response?.data?.error || "Không thể lưu thông tin phòng", "error");
+        showAlert("Error!", err.response?.data?.error || "Cannot save room information", "error");
       });
   };
 
   const handleDelete = (id) => {
-    showConfirm('Bạn có chắc chắn?', 'Dữ liệu phòng sẽ bị xóa vĩnh viễn!')
+    showConfirm('Are you sure?', 'Room data will be permanently deleted!')
       .then((result) => {
         if (result.isConfirmed) {
           axios.delete(`${API_URL}/${id}`, getConfig())
-            .then(() => { fetchRooms(); showToast('Xóa phòng thành công!', 'success'); })
-            .catch(err => { showAlert("Không thể xóa!", err.response?.data?.error, "error"); });
+            .then(() => { fetchRooms(); showToast('Room deleted successfully!', 'success'); })
+            .catch(err => { showAlert("Cannot delete!", err.response?.data?.error, "error"); });
         }
       });
   };
@@ -132,9 +128,9 @@ export default function RoomManagement() {
   const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
   const getStatusChip = (status, current, capacity) => {
-    if (status === 'maintenance') return <Chip label="Bảo trì" size="small" sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 'bold' }} />;
-    if (current >= capacity) return <Chip label="Đã đầy" size="small" sx={{ bgcolor: '#fee2e2', color: '#991b1b', fontWeight: 'bold' }} />;
-    return <Chip label="Còn trống" size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 'bold' }} />;
+    if (status === 'maintenance') return <Chip label="Maintenance" size="small" sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 'bold' }} />;
+    if (current >= capacity) return <Chip label="Full" size="small" sx={{ bgcolor: '#fee2e2', color: '#991b1b', fontWeight: 'bold' }} />;
+    return <Chip label="Vacant" size="small" sx={{ bgcolor: '#dcfce7', color: '#166534', fontWeight: 'bold' }} />;
   };
 
   return (
@@ -142,18 +138,18 @@ export default function RoomManagement() {
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4 }} spacing={2}>
         <Box>
           <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5 }}>Rooms Management</Typography>
-          <Typography variant="body2" sx={{ color: '#6b7280' }}>Quản lý danh mục phòng, hình ảnh và sức chứa</Typography>
+          <Typography variant="body2" sx={{ color: '#6b7280' }}>Manage room categories, images, and capacity</Typography>
         </Box>
         
         <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
-          <TextField placeholder="Tìm tên hoặc giá..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} sx={{ bgcolor: 'white', borderRadius: '12px', width: { xs: '100%', sm: '200px' }}} InputProps={{ startAdornment: ( <InputAdornment position="start"> <SearchIcon sx={{ color: '#94a3b8' }} /> </InputAdornment> ), }} />
+          <TextField placeholder="Search by name or price..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} sx={{ bgcolor: 'white', borderRadius: '12px', width: { xs: '100%', sm: '200px' }}} InputProps={{ startAdornment: ( <InputAdornment position="start"> <SearchIcon sx={{ color: '#94a3b8' }} /> </InputAdornment> ), }} />
           <TextField select size="small" value={priceFilter} onChange={(e) => setPriceFilter(e.target.value)} sx={{ bgcolor: 'white', borderRadius: '12px', minWidth: '160px' }}>
-            <MenuItem value="all">Tất cả mức giá</MenuItem>
-            <MenuItem value="under1m">Dưới 1 triệu</MenuItem>
-            <MenuItem value="1m_to_2m">Từ 1 - 2 triệu</MenuItem>
-            <MenuItem value="over2m">Trên 2 triệu</MenuItem>
+            <MenuItem value="all">All Prices</MenuItem>
+            <MenuItem value="under1m">Under 1,000,000</MenuItem>
+            <MenuItem value="1m_to_2m">1M - 2M</MenuItem>
+            <MenuItem value="over2m">Over 2,000,000</MenuItem>
           </TextField>
-          <Button onClick={() => handleOpenModal()} variant="contained" startIcon={<AddHomeWorkIcon />} sx={{ backgroundColor: '#1c3d8c', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3, whiteSpace: 'nowrap' }}> Thêm phòng </Button>
+          <Button onClick={() => handleOpenModal()} variant="contained" startIcon={<AddHomeWorkIcon />} sx={{ backgroundColor: '#1c3d8c', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3, whiteSpace: 'nowrap' }}> Add Room </Button>
         </Stack>
       </Stack>
 
@@ -161,15 +157,15 @@ export default function RoomManagement() {
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Phòng</TableCell>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Sức chứa</TableCell>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Đơn giá</TableCell>
-              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Trạng thái</TableCell>
-              <TableCell align="center" sx={{ fontWeight: '700', color: '#475569' }}>Hành động</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Room</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Capacity</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Price</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Status</TableCell>
+              <TableCell align="center" sx={{ fontWeight: '700', color: '#475569' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Đang tải danh sách phòng...</TableCell></TableRow> ) : (
+            {loading ? ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Loading room list...</TableCell></TableRow> ) : (
               filteredRooms.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                 <TableRow key={row.room_id} sx={{ '&:hover': { backgroundColor: '#f1f5f9' }, transition: '0.2s' }}>
                   <TableCell>
@@ -184,14 +180,14 @@ export default function RoomManagement() {
                     </Stack>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontWeight="600"> {row.current_occupancy} / {row.capacity} <small style={{color: '#94a3b8', fontWeight: 'normal'}}>(SV)</small> </Typography>
+                    <Typography variant="body2" fontWeight="600"> {row.current_occupancy} / {row.capacity} <small style={{color: '#94a3b8', fontWeight: 'normal'}}>(Pax)</small> </Typography>
                   </TableCell>
                   <TableCell sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>{formatCurrency(row.price)}</TableCell>
                   <TableCell> {getStatusChip(row.status, row.current_occupancy, row.capacity)} </TableCell>
                   <TableCell align="center">
                     <Stack direction="row" justifyContent="center" spacing={1}>
-                      <Tooltip title="Chỉnh sửa" arrow><IconButton onClick={() => handleOpenModal(row)} sx={{ color: '#2563eb' }}><CiEdit size={24} /></IconButton></Tooltip>
-                      <Tooltip title="Xóa phòng" arrow><IconButton onClick={() => handleDelete(row.room_id)} sx={{ color: '#ef4444' }}><CiTrash size={24} /></IconButton></Tooltip>
+                      <Tooltip title="Edit" arrow><IconButton onClick={() => handleOpenModal(row)} sx={{ color: '#2563eb' }}><CiEdit size={24} /></IconButton></Tooltip>
+                      <Tooltip title="Delete Room" arrow><IconButton onClick={() => handleDelete(row.room_id)} sx={{ color: '#ef4444' }}><CiTrash size={24} /></IconButton></Tooltip>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -210,7 +206,7 @@ export default function RoomManagement() {
 
       <Dialog open={open} onClose={handleCloseModal} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '20px' } }}>
         <DialogTitle sx={{ fontWeight: '800', pt: 3, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AddHomeWorkIcon /> {isEditMode ? 'Cập nhật phòng' : 'Thêm phòng mới'}
+          <AddHomeWorkIcon /> {isEditMode ? 'Update Room' : 'Add New Room'}
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 2 }}>
@@ -219,37 +215,37 @@ export default function RoomManagement() {
                 <Box>
                   <img src={imagePreview} alt="Preview" style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '12px', marginBottom: '10px' }} />
                   <Button component="label" variant="outlined" size="small" sx={{ borderRadius: '8px', textTransform: 'none' }}>
-                    Đổi ảnh khác
+                    Change Image
                     <input type="file" hidden accept="image/*" onChange={handleImageChange} />
                   </Button>
                 </Box>
               ) : (
                 <Box>
                   <CloudUploadIcon sx={{ fontSize: 50, color: '#94a3b8', mb: 1 }} />
-                  <Typography variant="body2" color="#64748b" mb={2}>Kéo thả hoặc nhấn để chọn ảnh phòng</Typography>
+                  <Typography variant="body2" color="#64748b" mb={2}>Drag & drop or click to select room image</Typography>
                   <Button component="label" variant="contained" sx={{ bgcolor: '#1c3d8c', borderRadius: '8px', textTransform: 'none' }}>
-                    Tải ảnh lên
+                    Upload Image
                     <input type="file" hidden accept="image/*" onChange={handleImageChange} />
                   </Button>
                 </Box>
               )}
             </Box>
 
-            <TextField label="Tên phòng" name="room_name" value={formData.room_name} onChange={handleChange} fullWidth variant="outlined" />
+            <TextField label="Room Name" name="room_name" value={formData.room_name} onChange={handleChange} fullWidth variant="outlined" />
             <Stack direction="row" spacing={2}>
-              <TextField label="Sức chứa" name="capacity" type="number" value={formData.capacity} onChange={handleChange} fullWidth />
-              <TextField label="Đơn giá" name="price" type="number" value={formData.price} onChange={handleChange} fullWidth />
+              <TextField label="Capacity" name="capacity" type="number" value={formData.capacity} onChange={handleChange} fullWidth />
+              <TextField label="Price" name="price" type="number" value={formData.price} onChange={handleChange} fullWidth />
             </Stack>
-            <TextField select label="Trạng thái" name="status" value={formData.status} onChange={handleChange} fullWidth>
-              <MenuItem value="vacant">Còn trống / Có thể ở</MenuItem>
-              <MenuItem value="maintenance">Đang bảo trì / Sửa chữa</MenuItem>
+            <TextField select label="Status" name="status" value={formData.status} onChange={handleChange} fullWidth>
+              <MenuItem value="vacant">Vacant / Available</MenuItem>
+              <MenuItem value="maintenance">Under Maintenance</MenuItem>
             </TextField>
-            <TextField label="Mô tả / Ghi chú" name="description" value={formData.description} onChange={handleChange} fullWidth multiline rows={2} />
+            <TextField label="Description / Notes" name="description" value={formData.description} onChange={handleChange} fullWidth multiline rows={2} />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button onClick={handleCloseModal} sx={{ color: '#64748b', fontWeight: 'bold' }}>Hủy bỏ</Button>
-          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#1c3d8c', fontWeight: 'bold', px: 4, borderRadius: '10px' }}> Lưu thông tin </Button>
+          <Button onClick={handleCloseModal} sx={{ color: '#64748b', fontWeight: 'bold' }}>Cancel</Button>
+          <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#1c3d8c', fontWeight: 'bold', px: 4, borderRadius: '10px' }}> Save Information </Button>
         </DialogActions>
       </Dialog>
     </Box>

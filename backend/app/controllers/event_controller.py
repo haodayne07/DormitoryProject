@@ -29,7 +29,7 @@ def create_event_logic():
         )
         db.session.add(new_event)
         db.session.commit()
-        return jsonify({'message': 'Tạo thông báo thành công!'}), 201
+        return jsonify({'message': 'Event created successfully!'}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
@@ -39,7 +39,7 @@ def delete_event_logic(event_id):
         event = Event.query.get_or_404(event_id)
         db.session.delete(event)
         db.session.commit()
-        return jsonify({'message': 'Xóa thông báo thành công!'}), 200
+        return jsonify({'message': 'Event deleted successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

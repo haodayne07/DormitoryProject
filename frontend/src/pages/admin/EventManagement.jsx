@@ -3,7 +3,7 @@ import {
   Typography, Box, Paper, Grid, Card, CardContent, CardActions, 
   Chip, Stack, Button, IconButton, Dialog, DialogTitle, DialogContent, 
   DialogActions, TextField, MenuItem, InputAdornment, Tooltip,
-  Pagination, PaginationItem // <-- THÊM IMPORT MỚI
+  Pagination, PaginationItem 
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddAlertIcon from '@mui/icons-material/AddAlert';
@@ -20,11 +20,9 @@ export default function EventManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // THÊM MỚI: State cho Phân trang
   const [page, setPage] = useState(0);
-  const rowsPerPage = 6; // Hiển thị 6 card mỗi trang để khớp với lưới 3 cột
+  const rowsPerPage = 6; 
 
-  // States cho Form Thêm Sự kiện
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ 
     title: '', 
@@ -36,7 +34,7 @@ export default function EventManagement() {
   const fetchData = useCallback(() => {
     axios.get('http://127.0.0.1:5000/api/events')
       .then(res => setEvents(res.data))
-      .catch(err => console.error("Lỗi tải sự kiện:", err))
+      .catch(err => console.error("Error fetching events:", err))
       .finally(() => setLoading(false));
   }, []);
 
@@ -59,7 +57,7 @@ export default function EventManagement() {
 
   const handleSubmit = () => {
     if (!formData.title || !formData.description || !formData.event_date) {
-      showAlert("Thiếu thông tin", "Vui lòng nhập đầy đủ tiêu đề, nội dung và ngày!", "warning");
+      showAlert("Missing Information", "Please enter the title, description, and date!", "warning");
       return;
     }
 
@@ -67,30 +65,30 @@ export default function EventManagement() {
       .then(() => {
         fetchData();
         handleClose();
-        showToast('Đã đăng thông báo thành công!', 'success');
+        showToast('Announcement posted successfully!', 'success');
       })
-      .catch(err => showAlert("Lỗi!", err.response?.data?.error, "error"));
+      .catch(err => showAlert("Error!", err.response?.data?.error, "error"));
   };
 
   const handleDelete = (id) => {
-    showConfirm('Xóa thông báo?', 'Bạn có chắc muốn xóa bản tin này không?')
+    showConfirm('Delete announcement?', 'Are you sure you want to delete this announcement?')
       .then((result) => {
         if (result.isConfirmed) {
           axios.delete(`http://127.0.0.1:5000/api/events/${id}`)
             .then(() => {
               fetchData();
-              showToast('Đã xóa thông báo!', 'success');
+              showToast('Announcement deleted successfully!', 'success');
             })
-            .catch(err => showAlert("Lỗi!", err.response?.data?.error, "error"));
+            .catch(err => showAlert("Error!", err.response?.data?.error, "error"));
         }
       });
   };
 
   const getTypeConfig = (type) => {
     switch(type) {
-      case 'warning': return { icon: <WarningAmberIcon />, color: '#d97706', bgcolor: '#fef3c7', label: 'Cảnh báo' };
-      case 'maintenance': return { icon: <BuildIcon />, color: '#dc2626', bgcolor: '#fee2e2', label: 'Bảo trì' };
-      default: return { icon: <InfoIcon />, color: '#2563eb', bgcolor: '#dbeafe', label: 'Thông tin' };
+      case 'warning': return { icon: <WarningAmberIcon />, color: '#d97706', bgcolor: '#fef3c7', label: 'Warning' };
+      case 'maintenance': return { icon: <BuildIcon />, color: '#dc2626', bgcolor: '#fee2e2', label: 'Maintenance' };
+      default: return { icon: <InfoIcon />, color: '#2563eb', bgcolor: '#dbeafe', label: 'Information' };
     }
   };
 
@@ -101,38 +99,36 @@ export default function EventManagement() {
 
   return (
     <Box sx={{ p: 1 }}>
-      {/* Header */}
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4 }} spacing={2}>
         <Box>
           <Typography variant="h4" fontWeight="900" color="#1e3a8a" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CampaignIcon fontSize="large" /> Bảng Tin & Sự Kiện
+            <CampaignIcon fontSize="large" /> News & Events
           </Typography>
           <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
-            Quản lý thông báo, lịch bảo trì và sự kiện nội bộ KTX
+            Manage announcements, maintenance schedules, and internal dormitory events
           </Typography>
         </Box>
         
         <Stack direction="row" spacing={2} width={{ xs: '100%', md: 'auto' }}>
           <TextField 
-              placeholder="Tìm thông báo..." size="small" value={searchTerm} 
-              onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }} // Reset về trang 1 khi tìm kiếm
+              placeholder="Search announcements..." size="small" value={searchTerm} 
+              onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }} 
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#64748b' }}/></InputAdornment> }}
               sx={{ width: { xs: '100%', sm: '250px' }, bgcolor: 'white', '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <Button variant="contained" startIcon={<AddAlertIcon />} onClick={handleOpen}
                   sx={{ bgcolor: '#1c3d8c', borderRadius: '10px', whiteSpace: 'nowrap', '&:hover': { bgcolor: '#152b65' } }}>
-            Đăng Thông Báo
+            Post Announcement
           </Button>
         </Stack>
       </Stack>
 
-      {/* Danh sách Sự kiện (Dạng Card Grid có áp dụng slice cho phân trang) */}
       {loading ? (
-        <Typography align="center" sx={{ mt: 5, color: '#64748b' }}>Đang tải bảng tin...</Typography>
+        <Typography align="center" sx={{ mt: 5, color: '#64748b' }}>Loading news board...</Typography>
       ) : filteredEvents.length === 0 ? (
         <Paper sx={{ p: 5, textAlign: 'center', borderRadius: '20px', bgcolor: '#f8fafc' }}>
           <CampaignIcon sx={{ fontSize: 60, color: '#cbd5e1', mb: 2 }} />
-          <Typography variant="h6" color="#64748b">Chưa có thông báo nào!</Typography>
+          <Typography variant="h6" color="#64748b">No announcements yet!</Typography>
         </Paper>
       ) : (
         <Box>
@@ -160,7 +156,7 @@ export default function EventManagement() {
                       </Typography>
                     </CardContent>
                     <CardActions sx={{ px: 3, pb: 2, pt: 0, justifyContent: 'flex-end' }}>
-                      <Tooltip title="Xóa bản tin này">
+                      <Tooltip title="Delete this announcement">
                         <IconButton onClick={() => handleDelete(event.event_id)} sx={{ color: '#ef4444', bgcolor: '#fee2e2', '&:hover': { bgcolor: '#fecaca' } }}>
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
@@ -172,9 +168,6 @@ export default function EventManagement() {
             })}
           </Grid>
 
-          {/* ========================================================= */}
-          {/* PHÂN TRANG HIỆN ĐẠI THEO HÌNH MẪU */}
-          {/* ========================================================= */}
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
             <Pagination 
               count={Math.ceil(filteredEvents.length / rowsPerPage) || 1} 
@@ -206,31 +199,30 @@ export default function EventManagement() {
         </Box>
       )}
 
-      {/* Modal Thêm Thông Báo */}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '20px' } }}>
         <DialogTitle sx={{ fontWeight: '800', pt: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AddAlertIcon color="primary" /> Đăng Thông Báo Mới
+          <AddAlertIcon color="primary" /> Post New Announcement
         </DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 1 }}>
-            <TextField label="Tiêu đề thông báo (VD: Lịch cúp điện Tòa A)" name="title" value={formData.title} onChange={handleChange} fullWidth autoFocus />
+            <TextField label="Announcement Title (e.g., Power outage schedule)" name="title" value={formData.title} onChange={handleChange} fullWidth autoFocus />
             
             <Stack direction="row" spacing={2}>
-              <TextField select label="Phân loại" name="type" value={formData.type} onChange={handleChange} fullWidth>
-                <MenuItem value="info">Thông tin chung</MenuItem>
-                <MenuItem value="warning">Cảnh báo (Mưa bão, An ninh)</MenuItem>
-                <MenuItem value="maintenance">Bảo trì (Điện, Nước, Thang máy)</MenuItem>
+              <TextField select label="Category" name="type" value={formData.type} onChange={handleChange} fullWidth>
+                <MenuItem value="info">General Information</MenuItem>
+                <MenuItem value="warning">Warning (Weather, Security)</MenuItem>
+                <MenuItem value="maintenance">Maintenance (Electricity, Water)</MenuItem>
               </TextField>
-              <TextField label="Ngày diễn ra" name="event_date" type="date" value={formData.event_date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} />
+              <TextField label="Event Date" name="event_date" type="date" value={formData.event_date} onChange={handleChange} fullWidth InputLabelProps={{ shrink: true }} />
             </Stack>
 
-            <TextField label="Nội dung chi tiết" name="description" value={formData.description} onChange={handleChange} fullWidth multiline rows={4} placeholder="Nhập chi tiết thời gian, địa điểm, lưu ý cho sinh viên..." />
+            <TextField label="Detailed Description" name="description" value={formData.description} onChange={handleChange} fullWidth multiline rows={4} placeholder="Enter details about time, location, notes for students..." />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button onClick={handleClose} sx={{ color: '#64748b', fontWeight: 'bold' }}>Hủy</Button>
-          <Button onClick={handleSubmit} variant="contained" sx={{ bgcolor: '#1c3d8c', borderRadius: '8px', px: 3 }}>
-            Đăng Lên Bảng Tin
+          <Button onClick={handleClose} sx={{ color: '#64748b', fontWeight: 'bold' }}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" sx={{ bgcolor: '#1c3d8c', borderRadius: '8px', px: 3, fontWeight: 'bold' }}>
+            Post to News Board
           </Button>
         </DialogActions>
       </Dialog>

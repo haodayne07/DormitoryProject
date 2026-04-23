@@ -63,26 +63,6 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-// ==========================================
-// DANH SÁCH MENU ĐƯỢC PHÂN QUYỀN
-// ==========================================
-
-// --- CODE CŨ (Đã đóng lại) ---
-/*
-const menuItems = [
-  { text: 'Dashboard', icon: <HomeIcon />, path: '/admin', allowedRoles: ['admin', 'accountant', 'warden'] },
-  { text: 'Students', icon: <PeopleIcon />, path: '/admin/students', allowedRoles: ['admin', 'warden'] },
-  { text: 'Rooms', icon: <MeetingRoomIcon />, path: '/admin/rooms', allowedRoles: ['admin', 'technician', 'warden'] }, 
-  { text: 'Contracts', icon: <AssignmentIcon />, path: '/admin/contracts', allowedRoles: ['admin', 'accountant', 'warden'] },
-  { text: 'Maintenance', icon: <BuildIcon />, path: '/admin/maintenance', allowedRoles: ['admin', 'technician'] },
-  { text: 'Payments', icon: <PaymentIcon />, path: '/admin/payments', allowedRoles: ['admin', 'accountant'] },
-  { text: 'Events', icon: <EventIcon />, path: '/admin/events', allowedRoles: ['admin', 'warden'] }, 
-  { text: 'Staff Manager', icon: <GroupIcon />, path: '/admin/staff', allowedRoles: ['admin'] }, 
-  { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings', allowedRoles: ['admin'] },
-];
-*/
-
-// --- CODE MỚI ---
 const menuItems = [
   { text: 'Dashboard', icon: <HomeIcon />, path: '/admin', allowedRoles: ['admin', 'staff'] },
   { text: 'Students', icon: <PeopleIcon />, path: '/admin/students', allowedRoles: ['admin', 'staff'] },
@@ -91,8 +71,8 @@ const menuItems = [
   { text: 'Maintenance', icon: <BuildIcon />, path: '/admin/maintenance', allowedRoles: ['admin', 'staff'] },
   { text: 'Payments', icon: <PaymentIcon />, path: '/admin/payments', allowedRoles: ['admin', 'staff'] },
   { text: 'Events', icon: <EventIcon />, path: '/admin/events', allowedRoles: ['admin', 'staff'] }, 
-  { text: 'Staff Manager', icon: <GroupIcon />, path: '/admin/staff', allowedRoles: ['admin'] }, // Chỉ định chỉ admin được xem
-  { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings', allowedRoles: ['admin'] }, // Chỉ định chỉ admin được xem
+  { text: 'Staff Manager', icon: <GroupIcon />, path: '/admin/staff', allowedRoles: ['admin'] }, 
+  { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings', allowedRoles: ['admin'] }, 
 ];
 
 export default function AdminLayout() {
@@ -100,11 +80,10 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Lấy role, xóa khoảng trắng dư thừa và chuyển về chữ thường
+
   const rawRole = localStorage.getItem('role') || 'student';
   const userRole = rawRole.trim().toLowerCase();
 
-  // Lọc menu một cách an toàn (Kiểm tra xem item có allowedRoles không trước khi filter)
   const filteredMenuItems = menuItems.filter(item => 
     item.allowedRoles && item.allowedRoles.includes(userRole)
   );

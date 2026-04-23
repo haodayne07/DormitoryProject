@@ -6,9 +6,9 @@ import traceback
 
 def get_settings_logic():
     try:
-        # Lấy dòng cấu hình đầu tiên
+        # Retrieve the first configuration record
         setting = Setting.query.first()
-        # Lấy tài khoản Admin (giả sử là user đầu tiên hoặc role='admin')
+        # Retrieve Admin account (assume first user or role='admin')
         admin = User.query.filter_by(role='admin').first() or User.query.first()
         
         return jsonify({
@@ -41,7 +41,7 @@ def update_dorm_config_logic():
         setting.default_deposit = data.get('defaultDeposit', setting.default_deposit)
         
         db.session.commit()
-        return jsonify({'message': 'Cập nhật cấu hình KTX thành công!'}), 200
+        return jsonify({'message': 'Dormitory configuration updated successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
@@ -56,7 +56,7 @@ def update_system_config_logic():
         setting.maintenance_mode = data.get('maintenanceMode', setting.maintenance_mode)
         
         db.session.commit()
-        return jsonify({'message': 'Cập nhật hệ thống thành công!'}), 200
+        return jsonify({'message': 'System configuration updated successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
@@ -70,17 +70,17 @@ def update_account_logic():
         admin.phone = data.get('phone', admin.phone)
         admin.email = data.get('email', admin.email)
         
-        # Nếu có nhập mật khẩu cũ và mới thì tiến hành đổi
+        # If both old and new passwords are provided, attempt to update password
         old_pass = data.get('oldPassword')
         new_pass = data.get('newPassword')
         if old_pass and new_pass:
             if admin.password == old_pass:
                 admin.password = new_pass
             else:
-                return jsonify({'error': 'Mật khẩu hiện tại không đúng!'}), 400
+                return jsonify({'error': 'Current password is incorrect!'}), 400
                 
         db.session.commit()
-        return jsonify({'message': 'Cập nhật tài khoản thành công!'}), 200
+        return jsonify({'message': 'Account updated successfully!'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 400
