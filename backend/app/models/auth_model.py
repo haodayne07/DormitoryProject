@@ -1,23 +1,3 @@
-from app.extensions import db
-from datetime import datetime
-
-ROLE_STUDENT = 'student'
-ROLE_ADMIN = 'admin'
-ROLE_STAFF = 'staff'            
-
-class User(db.Model):
-    __tablename__ = 'users'
-    __table_args__ = {'extend_existing': True} 
-
-    user_id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    
-    role = db.Column(db.String(20), default=ROLE_STUDENT)
-    balance = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    full_name = db.Column(db.String(100), nullable=True)
-    phone = db.Column(db.String(20), nullable=True)
-    student_code = db.Column(db.String(20), unique=True, nullable=True) 
+# Gộp chung vào user_model.py để tránh lỗi trùng lặp (Duplicate Table)
+# Import lại ở đây để các file controller khác gọi đến auth_model vẫn hoạt động bình thường
+from .user_model import User, ROLE_STUDENT, ROLE_ADMIN, ROLE_STAFF

@@ -183,16 +183,32 @@ def get_student_dashboard_logic(student_id):
                     "amenities": amenities_list
                 })
 
-        # BƯỚC QUAN TRỌNG: LẤY 3 BẢN TIN MỚI NHẤT TỪ DATABASE THẬT
+       
         recent_events = Event.query.order_by(Event.event_id.desc()).limit(3).all()
         events_data = []
         for e in recent_events:
+            
+            # ĐỊNH DẠNG NGÀY THÁNG AN TOÀN CHỐNG CRASH 500
+            date_formatted = "N/A"
+            if e.event_date:
+                if hasattr(e.event_date, 'strftime'):
+                    # Nếu đã là chuẩn Date Object
+                    date_formatted = e.event_date.strftime('%d/%m/%Y')
+                else:
+                    # Đề phòng dữ liệu cũ bị kẹt dưới dạng String
+                    try:
+                        clean_date = str(e.event_date).split('T')[0]
+                        date_obj = datetime.strptime(clean_date, '%Y-%m-%d')
+                        date_formatted = date_obj.strftime('%d/%m/%Y')
+                    except Exception:
+                        date_formatted = str(e.event_date)
+
             events_data.append({
                 "id": e.event_id,
                 "title": e.title,
                 "description": e.description,
-                "type": e.type, # info, warning, maintenance
-                "date": e.event_date.strftime('%d/%m/%Y') if e.event_date else "N/A"
+                "type": e.type,
+                "date": date_formatted
             })
 
         return jsonify({

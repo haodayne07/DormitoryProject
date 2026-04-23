@@ -9,7 +9,6 @@ from app.routes.setting_routes import setting_bp
 from app.routes.dashboard_routes import dashboard_bp
 from app.routes.maintenance_routes import maintenance_bp 
 import os 
-from app.routes.student_api_routes import student_api_bp
 from app.routes.payment_routes import payment_bp
 
 scheduler = APScheduler()
@@ -59,7 +58,6 @@ def create_app():
     app.register_blueprint(setting_bp, url_prefix='/api/settings')
     app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
     app.register_blueprint(maintenance_bp, url_prefix='/api/maintenance')
-    app.register_blueprint(student_api_bp, url_prefix='/api/students')
     
 
     register_routes(app)
