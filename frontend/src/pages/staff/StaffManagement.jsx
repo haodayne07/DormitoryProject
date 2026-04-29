@@ -93,21 +93,21 @@ export default function StaffManagement() {
   };
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4 }} spacing={2}>
-        <Box>
-          <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box sx={{ p: { xs: 0, sm: 1 }, maxWidth: '100%', overflowX: 'hidden' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} sx={{ mb: 4 }} spacing={2}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '2rem', sm: '2.125rem' } }}>
             <GroupIcon fontSize="large" /> Staff Management
           </Typography>
           <Typography variant="body2" sx={{ color: '#6b7280' }}>Manage staff list and system permissions</Typography>
         </Box>
         
-        <Button onClick={() => handleOpenStaffModal()} variant="contained" startIcon={<PersonAddIcon />} sx={{ backgroundColor: '#1e3a8a', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3 }}>
+        <Button onClick={() => handleOpenStaffModal()} variant="contained" startIcon={<PersonAddIcon />} sx={{ backgroundColor: '#1e3a8a', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3, width: { xs: '100%', sm: 'auto' } }}>
           Add Staff
         </Button>
       </Stack>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '20px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', border: '1px solid #f0f0f0' }}>
+      <TableContainer component={Paper} sx={{ borderRadius: '20px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', border: '1px solid #f0f0f0', overflowX: 'auto', maxWidth: '100%' }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
             <TableRow>

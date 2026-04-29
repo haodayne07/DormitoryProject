@@ -1,6 +1,6 @@
 from flask import request, jsonify
 from datetime import datetime
-from app.models.rental_model import MaintenanceHistory
+from app.models.rental_model import Contract, MaintenanceHistory
 from app.extensions import db
 from app.models.room_model import Device, Room 
 from app.models.auth_model import User 
@@ -9,14 +9,33 @@ import traceback
 # RM-6: Student submits a maintenance request
 def report_issue_logic():
     data = request.get_json()
+    user_id = data.get('user_id') or data.get('student_id')
+    device_id = data.get('devices_id') or data.get('device_id')
+    note = data.get('note') or data.get('description')
+
+    if not user_id or not device_id or not note:
+        return jsonify({'error': 'Missing required information!'}), 400
+
+    contract = Contract.query.filter_by(user_id=user_id, status='active').first()
+    if not contract:
+        return jsonify({'error': 'Student does not have an active room contract.'}), 400
+
+    device = Device.query.get(device_id)
+    if not device:
+        return jsonify({'error': 'Selected device does not exist.'}), 404
+
+    if device.room_id != contract.room_id:
+        return jsonify({'error': 'This device does not belong to the student current room.'}), 403
+
     new_report = MaintenanceHistory(
-        user_id=data['user_id'],
-        devices_id=data.get('devices_id'),
-        note=data['note'],
+        user_id=user_id,
+        devices_id=device_id,
+        note=note,
         date_maintenance=datetime.utcnow(),
         devices_status='pending'
     )
     db.session.add(new_report)
+    device.status = 'broken'
     db.session.commit()
     return jsonify({'message': 'Maintenance request submitted successfully!'}), 201
 

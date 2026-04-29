@@ -11,8 +11,8 @@ import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import NotificationBell from '../components/NotificationBell';
 
 const drawerWidth = 260;
 const collapsedWidth = 84; 
@@ -164,7 +164,11 @@ export default function StudentLayout() {
 
           <Box sx={{ flexGrow: 1 }} />
           <Stack direction="row" spacing={2} alignItems="center">
-            <IconButton sx={{ color: '#64748b' }}><NotificationsIcon /></IconButton>
+            <NotificationBell
+              onViewAll={() => navigate('/student/events')}
+              onNotificationClick={(notification) => navigate(notification.link || '/student/events')}
+              storageKey="student_notifications_seen_keys"
+            />
             {}
             <Avatar sx={{ width: 35, height: 35, bgcolor: '#e2e8f0', color: '#1e293b', fontSize: '14px', fontWeight: 'bold' }}>ST</Avatar>
           </Stack>

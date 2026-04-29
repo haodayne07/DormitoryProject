@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import { 
   Box, Drawer as MuiDrawer, List, ListItem, ListItemButton, 
-  ListItemIcon, ListItemText, Typography, IconButton, Divider
+  ListItemIcon, ListItemText, Typography, IconButton, Divider, Avatar, Stack, Chip, useMediaQuery
 } from '@mui/material';
 
 // Icons
@@ -19,6 +19,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import GroupIcon from '@mui/icons-material/Group';
+import NotificationBell from '../components/NotificationBell';
 
 const drawerWidth = 260;
 
@@ -77,8 +78,11 @@ const menuItems = [
 
 export default function AdminLayout() {
   const [open, setOpen] = useState(true); 
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 
   const rawRole = localStorage.getItem('role') || 'student';
@@ -87,8 +91,16 @@ export default function AdminLayout() {
   const filteredMenuItems = menuItems.filter(item => 
     item.allowedRoles && item.allowedRoles.includes(userRole)
   );
+  const roleLabel = userRole === 'admin' ? 'Administrator' : 'Staff';
+  const roleInitial = userRole === 'admin' ? 'A' : 'S';
+  const drawerExpanded = isMobile ? true : open;
+  const drawerOpen = isMobile ? mobileOpen : open;
 
   const handleDrawerToggle = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+      return;
+    }
     setOpen(!open);
   };
 
@@ -100,10 +112,16 @@ export default function AdminLayout() {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#ffffff' }}>
-      <Drawer variant="permanent" open={open}>
-        <Box sx={{ p: 3, mb: 1, display: 'flex', alignItems: 'center', justifyContent: open ? 'space-between' : 'center' }}>
-          {open && (
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#ffffff', overflowX: 'hidden' }}>
+      <Drawer
+        variant={isMobile ? 'temporary' : 'permanent'}
+        open={drawerOpen}
+        onClose={() => setMobileOpen(false)}
+        ModalProps={{ keepMounted: true }}
+        sx={isMobile ? { width: 0, flexShrink: 0, '& .MuiDrawer-paper': { width: drawerWidth } } : undefined}
+      >
+        <Box sx={{ p: 3, mb: 1, display: 'flex', alignItems: 'center', justifyContent: drawerExpanded ? 'space-between' : 'center' }}>
+          {drawerExpanded && (
             <Box>
               <Typography variant="h5" fontWeight="900" sx={{ color: 'white' }}>
                 DormHub
@@ -114,7 +132,7 @@ export default function AdminLayout() {
             </Box>
           )}
           <IconButton onClick={handleDrawerToggle} sx={{ color: '#94a3b8' }}>
-            {open ? <ChevronLeftIcon /> : <MenuIcon />}
+            {drawerExpanded ? <ChevronLeftIcon /> : <MenuIcon />}
           </IconButton>
         </Box>
         
@@ -128,9 +146,10 @@ export default function AdminLayout() {
                 <ListItemButton
                   component={Link}
                   to={item.path}
+                  onClick={() => { if (isMobile) setMobileOpen(false); }}
                   sx={{
                     minHeight: 48,
-                    justifyContent: open ? 'initial' : 'center',
+                    justifyContent: drawerExpanded ? 'initial' : 'center',
                     px: 2.5,
                     borderRadius: '12px',
                     backgroundColor: isActive ? '#34529d' : 'transparent',
@@ -138,12 +157,12 @@ export default function AdminLayout() {
                     '&:hover': { backgroundColor: '#2d4a96', color: 'white' },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center', color: 'inherit' }}>
+                  <ListItemIcon sx={{ minWidth: 0, mr: drawerExpanded ? 3 : 'auto', justifyContent: 'center', color: 'inherit' }}>
                     {item.icon}
                   </ListItemIcon>
                   <ListItemText 
                     primary={item.text} 
-                    sx={{ opacity: open ? 1 : 0 }}
+                    sx={{ opacity: drawerExpanded ? 1 : 0 }}
                     primaryTypographyProps={{ fontWeight: isActive ? 'bold' : '500' }} 
                   />
                 </ListItemButton>
@@ -158,23 +177,70 @@ export default function AdminLayout() {
               onClick={handleLogout}
               sx={{ 
                 minHeight: 48,
-                justifyContent: open ? 'initial' : 'center',
+                justifyContent: drawerExpanded ? 'initial' : 'center',
                 px: 2.5,
                 borderRadius: '12px', 
                 color: '#94a3b8', 
                 '&:hover': { backgroundColor: '#2d4a96', color: 'white' } 
               }}
             >
-              <ListItemIcon sx={{ minWidth: 0, mr: open ? 3 : 'auto', justifyContent: 'center', color: 'inherit' }}>
+              <ListItemIcon sx={{ minWidth: 0, mr: drawerExpanded ? 3 : 'auto', justifyContent: 'center', color: 'inherit' }}>
                 <LogoutIcon />
               </ListItemIcon>
-              <ListItemText primary="Logout" sx={{ opacity: open ? 1 : 0 }} primaryTypographyProps={{ fontWeight: '500' }} />
+              <ListItemText primary="Logout" sx={{ opacity: drawerExpanded ? 1 : 0 }} primaryTypographyProps={{ fontWeight: '500' }} />
             </ListItemButton>
           </ListItem>
         </List>
       </Drawer>
 
-      <Box component="main" sx={{ flexGrow: 1, p: 5, backgroundColor: '#ffffff', transition: '0.2s' }}>
+      <Box component="main" sx={{ flexGrow: 1, minWidth: 0, maxWidth: '100vw', p: { xs: 1.5, md: 4 }, backgroundColor: '#ffffff', transition: '0.2s', overflowX: 'hidden' }}>
+        <Box
+          sx={{
+            mb: 4,
+            px: { xs: 2, md: 3 },
+            py: 2,
+            border: '1px solid #e2e8f0',
+            borderRadius: '16px',
+            display: 'flex',
+            alignItems: { xs: 'flex-start', md: 'center' },
+            justifyContent: 'space-between',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 2,
+            bgcolor: '#ffffff',
+            boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
+            {isMobile && (
+              <IconButton onClick={() => setMobileOpen(true)} sx={{ color: '#1c3d8c', mt: -0.5, flexShrink: 0 }}>
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Box sx={{ minWidth: 0 }}>
+            <Typography variant="h6" fontWeight="800" color="#1e293b">
+              {roleLabel} Workspace
+            </Typography>
+            <Typography variant="body2" color="#64748b">
+              OFFICIAL MANAGEMENT PAGE
+            </Typography>
+            </Box>
+          </Box>
+
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: { xs: '100%', md: 'auto' }, justifyContent: { xs: 'flex-start', md: 'flex-end' }, flexWrap: 'wrap' }}>
+            <NotificationBell
+              onViewAll={() => navigate('/admin/events')}
+              onNotificationClick={(notification) => navigate(notification.link || '/admin/events')}
+              storageKey={`${userRole}_notifications_seen_keys`}
+            />
+            <Chip
+              label={roleLabel}
+              sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: '700', borderRadius: '10px' }}
+            />
+            <Avatar sx={{ width: 38, height: 38, bgcolor: '#1c3d8c', fontWeight: 'bold' }}>
+              {roleInitial}
+            </Avatar>
+          </Stack>
+        </Box>
         <Outlet />
       </Box>
     </Box>

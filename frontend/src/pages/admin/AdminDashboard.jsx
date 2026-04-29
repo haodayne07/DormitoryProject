@@ -85,10 +85,10 @@ export default function AdminDashboard() {
     : 0;
 
   return (
-    <Box sx={{ p: 1, width: '100%' }}>
+    <Box sx={{ p: { xs: 0, sm: 1 }, width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
       
       <Box sx={{ mb: 4, pb: 2, borderBottom: '2px solid #f1f5f9' }}>
-        <Typography variant="h3" fontWeight="900" sx={{ color: '#1e3a8a', mb: 1 }}>
+        <Typography variant="h3" fontWeight="900" sx={{ color: '#1e3a8a', mb: 1, fontSize: { xs: '2.25rem', md: '3rem' } }}>
           Dashboard
         </Typography>
         <Typography variant="h6" sx={{ color: '#64748b', fontWeight: 'normal' }}>
@@ -111,7 +111,7 @@ export default function AdminDashboard() {
         </Grid>
       </Grid>
 
-      <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
+      <Stack direction="row" spacing={1.5} sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}>
         <Chip 
           label="Occupancy Rate" 
           onClick={() => setActiveChart('occupancy')}

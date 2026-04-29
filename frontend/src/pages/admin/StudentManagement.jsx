@@ -4,10 +4,11 @@ import {
   TableContainer, TableHead, TableRow, Chip, Avatar, Stack, Button,
   IconButton, Dialog, DialogTitle, DialogContent, DialogActions, 
   TextField, Tooltip, InputAdornment, 
-  Pagination, PaginationItem 
+  Pagination, PaginationItem, MenuItem
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { CiEdit, CiTrash } from "react-icons/ci";
 import axios from 'axios';
 import { showToast, showConfirm, showAlert } from '../../utils/swal';
@@ -22,10 +23,14 @@ export default function StudentManagement() {
 
   const [open, setOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [studentPayments, setStudentPayments] = useState([]);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   
   const [formData, setFormData] = useState({ 
     user_id: '', username: '', email: '', password: '', 
-    full_name: '', phone: '', student_code: '' 
+    full_name: '', phone: '', student_code: '', gender: 'male'
   });
 
   const API_URL = 'http://127.0.0.1:5000/api/students';
@@ -49,7 +54,8 @@ export default function StudentManagement() {
       s.username?.toLowerCase().includes(term) || 
       s.email?.toLowerCase().includes(term) ||
       s.full_name?.toLowerCase().includes(term) ||
-      s.student_code?.toLowerCase().includes(term)
+      s.student_code?.toLowerCase().includes(term) ||
+      (s.gender === 'female' ? 'female women' : 'male men').includes(term)
     );
   });
 
@@ -58,11 +64,11 @@ export default function StudentManagement() {
       setIsEditMode(true);
       setFormData({ 
         user_id: student.user_id, username: student.username, email: student.email, password: '',
-        full_name: student.full_name || '', phone: student.phone || '', student_code: student.student_code || ''
+        full_name: student.full_name || '', phone: student.phone || '', student_code: student.student_code || '', gender: student.gender || 'male'
       });
     } else {
       setIsEditMode(false);
-      setFormData({ user_id: '', username: '', email: '', password: '', full_name: '', phone: '', student_code: '' });
+      setFormData({ user_id: '', username: '', email: '', password: '', full_name: '', phone: '', student_code: '', gender: 'male' });
     }
     setOpen(true);
   };
@@ -96,33 +102,55 @@ export default function StudentManagement() {
       });
   };
 
+  const handleOpenPaymentHistory = (student) => {
+    setSelectedStudent(student);
+    setStudentPayments([]);
+    setPaymentLoading(true);
+    setPaymentOpen(true);
+
+    axios.get(`http://127.0.0.1:5000/api/payments/student/${student.user_id}`, getConfig())
+      .then((res) => setStudentPayments(res.data || []))
+      .catch((err) => showAlert("Error!", err.response?.data?.error || "Cannot load payment history", "error"))
+      .finally(() => setPaymentLoading(false));
+  };
+
+  const paidTotal = studentPayments
+    .filter((item) => item.status === 'paid')
+    .reduce((sum, item) => sum + Number(item.amount_paid || item.amount || 0), 0);
+  const unpaidCount = studentPayments.filter((item) => item.status === 'unpaid').length;
+
   const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const getGenderLabel = (value) => value === 'female' ? 'Female' : 'Male';
+  const getGenderChipStyle = (value) => value === 'female'
+    ? { bgcolor: '#fce7f3', color: '#9d174d' }
+    : { bgcolor: '#dbeafe', color: '#1e40af' };
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4 }} spacing={2}>
-        <Box>
-          <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5 }}>Students List</Typography>
+    <Box sx={{ p: { xs: 0, sm: 1 }, maxWidth: '100%', overflowX: 'hidden' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} sx={{ mb: 4 }} spacing={2}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5, fontSize: { xs: '2rem', sm: '2.125rem' } }}>Students List</Typography>
           <Typography variant="body2" sx={{ color: '#6b7280' }}>Manage student accommodation profiles</Typography>
         </Box>
         
-        <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
           <TextField 
             placeholder="Search by name, email, Student ID..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
             sx={{ bgcolor: 'white', borderRadius: '12px', '& .MuiOutlinedInput-root': { borderRadius: '12px' }, width: { xs: '100%', sm: '280px' } }}
             InputProps={{ startAdornment: ( <InputAdornment position="start"> <SearchIcon sx={{ color: '#94a3b8' }} /> </InputAdornment> ) }}
           />
-          <Button onClick={() => handleOpenModal()} variant="contained" startIcon={<PersonAddIcon />} sx={{ backgroundColor: '#1e3a8a', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3 }}>
+          <Button onClick={() => handleOpenModal()} variant="contained" startIcon={<PersonAddIcon />} sx={{ backgroundColor: '#1e3a8a', borderRadius: '12px', textTransform: 'none', fontWeight: 'bold', px: 3, whiteSpace: 'nowrap' }}>
             Add New
           </Button>
         </Stack>
       </Stack>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '20px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', border: '1px solid #f0f0f0' }}>
+      <TableContainer component={Paper} sx={{ borderRadius: '20px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', border: '1px solid #f0f0f0', overflowX: 'auto', maxWidth: '100%' }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ backgroundColor: '#f8fafc' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Student Profile</TableCell>
+              <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Gender</TableCell>
               <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Contact Info</TableCell>
               <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Room</TableCell>
               <TableCell sx={{ fontWeight: '700', color: '#475569' }}>Wallet Balance</TableCell>
@@ -130,7 +158,7 @@ export default function StudentManagement() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {loading ? ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Loading data...</TableCell></TableRow> ) : (
+            {loading ? ( <TableRow><TableCell colSpan={6} align="center" sx={{ py: 8 }}>Loading data...</TableCell></TableRow> ) : (
               filteredStudents.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                 <TableRow key={row.user_id} sx={{ '&:hover': { backgroundColor: '#f1f5f9' }, transition: '0.2s' }}>
                   <TableCell>
@@ -145,6 +173,9 @@ export default function StudentManagement() {
                     </Stack>
                   </TableCell>
                   <TableCell>
+                    <Chip label={getGenderLabel(row.gender)} size="small" sx={{ fontWeight: 'bold', ...getGenderChipStyle(row.gender) }} />
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="body2" color="#475569">{row.email}</Typography>
                     <Typography variant="caption" color="#64748b">{row.phone || 'Phone: N/A'}</Typography>
                   </TableCell>
@@ -154,6 +185,7 @@ export default function StudentManagement() {
                   <TableCell sx={{ fontWeight: 'bold', color: '#059669' }}>{formatCurrency(row.balance || 0)}</TableCell>
                   <TableCell align="center">
                     <Stack direction="row" justifyContent="center" spacing={1}>
+                      <Tooltip title="Payment history"><IconButton onClick={() => handleOpenPaymentHistory(row)} sx={{ color: '#059669' }}><ReceiptLongIcon fontSize="small" /></IconButton></Tooltip>
                       <Tooltip title="Edit"><IconButton onClick={() => handleOpenModal(row)} sx={{ color: '#2563eb' }}><CiEdit size={22} /></IconButton></Tooltip>
                       <Tooltip title="Delete"><IconButton onClick={() => handleDelete(row.user_id)} sx={{ color: '#ef4444' }}><CiTrash size={22} /></IconButton></Tooltip>
                     </Stack>
@@ -161,7 +193,7 @@ export default function StudentManagement() {
                 </TableRow>
               ))
             )}
-            {filteredStudents.length === 0 && !loading && ( <TableRow><TableCell colSpan={5} align="center" sx={{ py: 4, color: '#94a3b8' }}>No students match the search keyword.</TableCell></TableRow> )}
+            {filteredStudents.length === 0 && !loading && ( <TableRow><TableCell colSpan={6} align="center" sx={{ py: 4, color: '#94a3b8' }}>No students match the search keyword.</TableCell></TableRow> )}
           </TableBody>
         </Table>
 
@@ -180,21 +212,93 @@ export default function StudentManagement() {
         <DialogTitle sx={{ fontWeight: '800', pt: 3, color: '#1e3a8a' }}>{isEditMode ? 'Update Profile' : 'Create Student Profile'}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2.5} sx={{ mt: 1 }}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
               <TextField label="Username" name="username" value={formData.username} onChange={handleChange} fullWidth disabled={isEditMode} size="small" />
               {!isEditMode && <TextField label="Password" name="password" type="password" value={formData.password} onChange={handleChange} fullWidth size="small" />}
             </Box>
             <TextField label="Full Name" name="full_name" value={formData.full_name} onChange={handleChange} fullWidth size="small" />
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
               <TextField label="Student ID" name="student_code" value={formData.student_code} onChange={handleChange} fullWidth size="small" />
               <TextField label="Phone Number" name="phone" value={formData.phone} onChange={handleChange} fullWidth size="small" />
             </Box>
+            <TextField select label="Gender" name="gender" value={formData.gender} onChange={handleChange} fullWidth size="small">
+              <MenuItem value="male">Male</MenuItem>
+              <MenuItem value="female">Female</MenuItem>
+            </TextField>
             <TextField label="Contact Email" name="email" value={formData.email} onChange={handleChange} fullWidth size="small" />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
           <Button onClick={handleCloseModal} sx={{ color: '#64748b', fontWeight: 'bold' }}>Cancel</Button>
           <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#2563eb', fontWeight: 'bold', px: 3 }}>Save Profile</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={paymentOpen} onClose={() => setPaymentOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: '800', pt: 3, color: '#1e3a8a' }}>
+          Payment History - {selectedStudent?.full_name || selectedStudent?.username || 'Student'}
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
+            <Paper variant="outlined" sx={{ p: 2, flex: 1, borderRadius: '12px' }}>
+              <Typography variant="body2" color="#64748b">Paid total</Typography>
+              <Typography variant="h6" fontWeight="900" color="#059669">{formatCurrency(paidTotal)}</Typography>
+            </Paper>
+            <Paper variant="outlined" sx={{ p: 2, flex: 1, borderRadius: '12px' }}>
+              <Typography variant="body2" color="#64748b">Unpaid bills</Typography>
+              <Typography variant="h6" fontWeight="900" color="#dc2626">{unpaidCount}</Typography>
+            </Paper>
+          </Stack>
+
+          {paymentLoading ? (
+            <Typography align="center" sx={{ py: 5, color: '#64748b' }}>Loading payment history...</Typography>
+          ) : studentPayments.length === 0 ? (
+            <Typography align="center" sx={{ py: 5, color: '#94a3b8' }}>
+              This student does not have any bills yet.
+            </Typography>
+          ) : (
+            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: '12px', overflowX: 'auto' }}>
+              <Table size="small" sx={{ minWidth: 760 }}>
+                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: '700' }}>Bill</TableCell>
+                    <TableCell sx={{ fontWeight: '700' }}>Room</TableCell>
+                    <TableCell sx={{ fontWeight: '700' }}>Due Date</TableCell>
+                    <TableCell sx={{ fontWeight: '700' }}>Amount</TableCell>
+                    <TableCell sx={{ fontWeight: '700' }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: '700' }}>Paid At</TableCell>
+                    <TableCell sx={{ fontWeight: '700' }}>Method</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {studentPayments.map((item) => (
+                    <TableRow key={item.bill_id} sx={{ '&:hover': { bgcolor: '#f8fafc' } }}>
+                      <TableCell sx={{ fontWeight: '600', color: '#1e293b' }}>{item.title}</TableCell>
+                      <TableCell>{item.room_name}</TableCell>
+                      <TableCell>{item.due_date || '-'}</TableCell>
+                      <TableCell sx={{ fontWeight: '700', color: '#059669' }}>{formatCurrency(item.amount || 0)}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={item.status === 'paid' ? 'Paid' : 'Unpaid'}
+                          size="small"
+                          sx={{
+                            fontWeight: '700',
+                            bgcolor: item.status === 'paid' ? '#dcfce7' : '#fee2e2',
+                            color: item.status === 'paid' ? '#166534' : '#991b1b'
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>{item.payment_date || '-'}</TableCell>
+                      <TableCell>{item.payment_method || '-'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setPaymentOpen(false)} sx={{ color: '#64748b', fontWeight: 'bold' }}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

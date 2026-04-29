@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Typography, Box, Paper, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, Chip, Avatar, Stack, Button,
@@ -20,12 +20,12 @@ export default function Maintenance() {
   const [issues, setIssues] = useState([]);
   const [issuesLoading, setIssuesLoading] = useState(true);
 
-  const fetchIssues = () => {
+  const fetchIssues = useCallback(() => {
     axios.get('http://127.0.0.1:5000/api/maintenance/list')
       .then(res => setIssues(res.data))
       .catch(err => console.error("Error fetching issue list:", err))
       .finally(() => setIssuesLoading(false));
-  };
+  }, []);
 
   const handleStatusChange = (issueId, newStatus) => {
     const oldIssues = [...issues];
@@ -69,12 +69,34 @@ export default function Maintenance() {
     devices_id: '', room_id: '', devices_name: '', status: 'good', purchase_date: '' 
   });
 
-  const fetchData = () => {
-    axios.get('http://127.0.0.1:5000/api/rooms').then(res => setRooms(res.data));
-    axios.get('http://127.0.0.1:5000/api/rooms/devices').then(response => { setDevices(response.data); setLoading(false); });
-  };
+  const getConfig = useCallback((isMultipart = false) => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(isMultipart ? { 'Content-Type': 'multipart/form-data' } : {})
+      }
+    };
+  }, []);
 
-  useEffect(() => { fetchData(); fetchIssues(); }, []);
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    Promise.all([
+      axios.get('http://127.0.0.1:5000/api/rooms', getConfig()),
+      axios.get('http://127.0.0.1:5000/api/rooms/devices', getConfig())
+    ])
+      .then(([roomsRes, devicesRes]) => {
+        setRooms(roomsRes.data || []);
+        setDevices(devicesRes.data || []);
+      })
+      .catch((err) => {
+        console.error("Error fetching devices:", err);
+        showAlert("Error", err.response?.data?.error || "Cannot load rooms/devices", "error");
+      })
+      .finally(() => setLoading(false));
+  }, [getConfig]);
+
+  useEffect(() => { fetchData(); fetchIssues(); }, [fetchData, fetchIssues]);
 
   const filteredDevices = devices.filter(d => {
     const matchText = d.devices_name.toLowerCase().includes(searchTerm.toLowerCase()) || d.room_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -113,13 +135,22 @@ export default function Maintenance() {
     if (formData.purchase_date) dataToSend.append('purchase_date', formData.purchase_date);
     if (imageFile) dataToSend.append('image', imageFile);
 
-    const apiCall = isEditMode ? axios.put(`http://127.0.0.1:5000/api/rooms/devices/${formData.devices_id}`, dataToSend) : axios.post('http://127.0.0.1:5000/api/rooms/devices', dataToSend);
-    apiCall.then(() => { fetchData(); handleCloseModal(); showToast('Success!', 'success'); });
+    const apiCall = isEditMode
+      ? axios.put(`http://127.0.0.1:5000/api/rooms/devices/${formData.devices_id}`, dataToSend, getConfig(true))
+      : axios.post('http://127.0.0.1:5000/api/rooms/devices', dataToSend, getConfig(true));
+
+    apiCall
+      .then(() => { fetchData(); handleCloseModal(); showToast('Success!', 'success'); })
+      .catch((err) => showAlert("Error!", err.response?.data?.error || "Cannot save device", "error"));
   };
 
   const handleDelete = (id) => {
     showConfirm('Delete device?', 'Data will be permanently lost!').then((result) => {
-      if (result.isConfirmed) { axios.delete(`http://127.0.0.1:5000/api/rooms/devices/${id}`).then(() => { fetchData(); showToast('Deleted successfully!', 'success'); }); }
+      if (result.isConfirmed) {
+        axios.delete(`http://127.0.0.1:5000/api/rooms/devices/${id}`, getConfig())
+          .then(() => { fetchData(); showToast('Deleted successfully!', 'success'); })
+          .catch((err) => showAlert("Error!", err.response?.data?.error || "Cannot delete device", "error"));
+      }
     });
   };
 
@@ -130,12 +161,12 @@ export default function Maintenance() {
   };
 
   return (
-    <Box sx={{ p: 1 }}>
+    <Box sx={{ p: { xs: 0, sm: 1 }, maxWidth: '100%', overflowX: 'hidden' }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" fontWeight="900" sx={{ color: '#1e3a8a', mb: 0.5 }}>Device Maintenance</Typography>
         <Typography variant="body2" sx={{ color: '#6b7280', mb: 3 }}>Receive issue reports and manage dormitory assets</Typography>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabIndex} onChange={(e, val) => setTabIndex(val)} textColor="primary" indicatorColor="primary">
+          <Tabs value={tabIndex} onChange={(e, val) => setTabIndex(val)} textColor="primary" indicatorColor="primary" variant="scrollable" allowScrollButtonsMobile>
             <Tab label="Maintenance Requests" sx={{ fontWeight: 'bold', fontSize: '15px', textTransform: 'none' }} />
             <Tab label="Device List" sx={{ fontWeight: 'bold', fontSize: '15px', textTransform: 'none' }} />
           </Tabs>
@@ -143,7 +174,7 @@ export default function Maintenance() {
       </Box>
 
       {tabIndex === 0 && (
-        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <TableContainer component={Paper} elevation={0} sx={{ borderRadius: '16px', border: '1px solid #e2e8f0', overflowX: 'auto', maxWidth: '100%' }}>
           <Table sx={{ minWidth: 700 }}>
             <TableHead sx={{ bgcolor: '#f8fafc' }}>
               <TableRow>
@@ -183,7 +214,7 @@ export default function Maintenance() {
       {tabIndex === 1 && (
         <Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end" alignItems="center" sx={{ mb: 3 }} spacing={2}>
-            <Stack direction="row" spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: { xs: '100%', sm: 'auto' } }}>
               <TextField placeholder="Search device name, room..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} sx={{ bgcolor: 'white', borderRadius: '12px', '& .MuiOutlinedInput-root': { borderRadius: '12px' }, width: { xs: '100%', sm: '220px' }}} InputProps={{ startAdornment: ( <InputAdornment position="start"> <SearchIcon sx={{ color: '#94a3b8' }} /> </InputAdornment> ), }} />
               <TextField select size="small" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} sx={{ bgcolor: 'white', borderRadius: '12px', '& .MuiOutlinedInput-root': { borderRadius: '12px' }, minWidth: '150px' }}>
                 <MenuItem value="all">All statuses</MenuItem>
@@ -195,7 +226,7 @@ export default function Maintenance() {
             </Stack>
           </Stack>
 
-          <TableContainer component={Paper} sx={{ borderRadius: '20px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+          <TableContainer component={Paper} sx={{ borderRadius: '20px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)', border: '1px solid #f0f0f0', overflowX: 'auto', maxWidth: '100%' }}>
             <Table sx={{ minWidth: 650 }}>
               <TableHead sx={{ backgroundColor: '#f8fafc' }}>
                 <TableRow>
@@ -271,7 +302,7 @@ export default function Maintenance() {
               {rooms.map((room) => ( <MenuItem key={room.room_id} value={room.room_id}> {room.room_name} (Vacant: {room.capacity - room.current_occupancy}) </MenuItem> ))}
             </TextField>
             <TextField label="Device Name" name="devices_name" value={formData.devices_name} onChange={handleChange} fullWidth variant="outlined" />
-            <Stack direction="row" spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField select label="Condition" name="status" value={formData.status} onChange={handleChange} fullWidth>
                 <MenuItem value="good">Good Condition</MenuItem>
                 <MenuItem value="broken">Broken</MenuItem>

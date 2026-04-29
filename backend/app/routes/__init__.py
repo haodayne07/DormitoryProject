@@ -4,6 +4,7 @@ from .student_routes import student_bp
 from .billing_routes import billing_bp
 from .payment_routes import payment_bp 
 from .admin_routes import admin_bp
+from .notification_routes import notification_bp
 
 def register_routes(app):
    
@@ -13,3 +14,4 @@ def register_routes(app):
     app.register_blueprint(billing_bp, url_prefix='/api/billing')
     app.register_blueprint(payment_bp, url_prefix='/api/payments')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(notification_bp, url_prefix='/api/notifications')

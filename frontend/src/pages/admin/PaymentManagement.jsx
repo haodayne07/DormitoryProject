@@ -141,14 +141,14 @@ export default function PaymentManagement() {
   );
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 3 }} spacing={2}>
-        <Box>
-          <Typography variant="h4" fontWeight="900" color="#1e3a8a" gutterBottom>Payments & Bills</Typography>
+    <Box sx={{ p: { xs: 0, sm: 1 }, maxWidth: '100%', overflowX: 'hidden' }}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} sx={{ mb: 3 }} spacing={2}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h4" fontWeight="900" color="#1e3a8a" gutterBottom sx={{ fontSize: { xs: '2rem', sm: '2.125rem' } }}>Payments & Bills</Typography>
           <Typography variant="body2" sx={{ color: '#6b7280' }}>Manage bills and track monthly revenue</Typography>
         </Box>
         
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="stretch" sx={{ width: { xs: '100%', md: 'auto' } }}>
           <TextField 
               placeholder="Search student, room..." size="small" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ color: '#64748b' }}/></InputAdornment> }}
@@ -160,13 +160,13 @@ export default function PaymentManagement() {
       </Stack>
 
       <Paper sx={{ mb: 3, borderRadius: '16px', boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)' }}>
-        <Tabs value={tabIndex} onChange={handleTabChange} sx={{ px: 2, '& .MuiTab-root': { fontWeight: 'bold', textTransform: 'none' }}}>
+        <Tabs value={tabIndex} onChange={handleTabChange} variant="scrollable" allowScrollButtonsMobile sx={{ px: 2, '& .MuiTab-root': { fontWeight: 'bold', textTransform: 'none' }}}>
           <Tab icon={<ReceiptIcon sx={{ mr: 1 }}/>} iconPosition="start" label={`Pending Bills (${bills.filter(b => b.status === 'unpaid').length})`} />
           <Tab icon={<HistoryIcon sx={{ mr: 1 }}/>} iconPosition="start" label="Revenue History" />
         </Tabs>
       </Paper>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '20px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+      <TableContainer component={Paper} sx={{ borderRadius: '20px', border: '1px solid #f0f0f0', overflowX: 'auto', maxWidth: '100%' }}>
         <Table sx={{ minWidth: 650 }}>
           <TableHead sx={{ bgcolor: '#f8fafc' }}>
             <TableRow>

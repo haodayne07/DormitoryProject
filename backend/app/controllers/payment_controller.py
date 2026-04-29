@@ -76,15 +76,53 @@ def get_payment_history_logic():
             bill = Bill.query.get(p.bill_id)
             contract = Contract.query.get(bill.contract_id) if bill else None
             student = User.query.get(contract.user_id) if contract else None
+            room = Room.query.get(contract.room_id) if contract else None
             
             result.append({
                 'payment_id': p.payment_id,
+                'bill_id': p.bill_id,
                 'title': bill.title if bill else "Unknown",
+                'student_id': student.user_id if student else None,
                 'student_name': getattr(student, 'full_name', 'Unknown') if student else "Unknown",
+                'room_name': room.room_name if room else "Unknown",
                 'method': p.method,
                 'amount_paid': p.amount_paid,
                 'payment_date': p.payment_date.strftime('%Y-%m-%d %H:%M')
             })
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def get_student_payment_history_logic(student_id):
+    try:
+        student = User.query.get(student_id)
+        contracts = Contract.query.filter_by(user_id=student_id).all()
+        contract_ids = [contract.contract_id for contract in contracts]
+        if not contract_ids:
+            return jsonify([]), 200
+
+        bills = Bill.query.filter(Bill.contract_id.in_(contract_ids)).order_by(Bill.due_date.desc()).all()
+        result = []
+        for bill in bills:
+            payment = Payment.query.filter_by(bill_id=bill.bill_id).order_by(Payment.payment_date.desc()).first()
+            contract = Contract.query.get(bill.contract_id)
+            room = Room.query.get(contract.room_id) if contract else None
+
+            result.append({
+                'bill_id': bill.bill_id,
+                'student_id': student_id,
+                'student_name': getattr(student, 'full_name', student.username) if student else 'Unknown',
+                'title': bill.title,
+                'room_name': room.room_name if room else 'Unknown',
+                'amount': bill.amount,
+                'due_date': bill.due_date.strftime('%Y-%m-%d') if bill.due_date else '',
+                'status': bill.status,
+                'payment_id': payment.payment_id if payment else None,
+                'payment_method': payment.method if payment else '',
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d %H:%M') if payment and payment.payment_date else '',
+                'amount_paid': payment.amount_paid if payment else 0
+            })
+
         return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -119,6 +157,8 @@ def create_momo_payment_logic():
     try:
         data = request.get_json()
         bill_id = data.get('bill_id')
+        if not bill_id:
+            return jsonify({"error": "Missing bill ID"}), 400
         
         bill = Bill.query.get_or_404(bill_id)
         if bill.status == 'paid':

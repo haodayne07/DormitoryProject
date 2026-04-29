@@ -16,15 +16,18 @@ import { showToast, showAlert } from '../../utils/swal';
 export default function StudentMaintenance() {
   const [history, setHistory] = useState([]);
   const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true); 
+  const currentStudentId = localStorage.getItem('user_id'); 
+  const [loading, setLoading] = useState(Boolean(currentStudentId)); 
   
   const [openModal, setOpenModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({ device_id: '', description: '' });
 
-  const currentStudentId = 1; 
-
   const fetchData = useCallback(() => {
+    if (!currentStudentId) {
+      return;
+    }
+
     axios.get(`http://127.0.0.1:5000/api/students/my-room/${currentStudentId}`)
       .then(res => {
         if (res.data && res.data.devices) {
@@ -45,9 +48,11 @@ export default function StudentMaintenance() {
       .finally(() => setLoading(false));
   }, [currentStudentId]);
 
-  useEffect(() => { 
-    fetchData(); 
-  }, [fetchData]);
+  useEffect(() => {
+    if (currentStudentId) {
+      fetchData();
+    }
+  }, [currentStudentId, fetchData]);
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -85,14 +90,25 @@ export default function StudentMaintenance() {
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}><CircularProgress /></Box>;
 
+  if (!currentStudentId) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Paper elevation={0} sx={{ p: 4, borderRadius: '16px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <Typography variant="h6" fontWeight="800" color="#1e293b">Session not found</Typography>
+          <Typography variant="body2" color="#64748b" sx={{ mt: 1 }}>Please log in again to submit maintenance reports.</Typography>
+        </Paper>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ width: '100%', pb: 5 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-        <Stack direction="row" alignItems="center" spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }} spacing={2} sx={{ mb: 4 }}>
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
           <Avatar sx={{ bgcolor: '#d97706', width: 60, height: 60, boxShadow: '0 4px 10px rgba(217,119,6,0.2)' }}>
             <BuildCircleIcon fontSize="large" />
           </Avatar>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography variant="h4" fontWeight="900" color="#1e3a8a">Maintenance Report</Typography>
             <Typography variant="body1" sx={{ color: '#6b7280', mt: 0.5 }}>
               Submit repair requests for equipment in your room
@@ -103,7 +119,7 @@ export default function StudentMaintenance() {
           variant="contained" 
           startIcon={<AddCircleOutlineIcon />} 
           onClick={() => setOpenModal(true)}
-          sx={{ bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, borderRadius: '10px', fontWeight: 'bold', px: 3, py: 1.5, boxShadow: '0 4px 14px rgba(239,68,68,0.3)' }}
+          sx={{ bgcolor: '#ef4444', '&:hover': { bgcolor: '#dc2626' }, borderRadius: '10px', fontWeight: 'bold', px: 3, py: 1.5, boxShadow: '0 4px 14px rgba(239,68,68,0.3)', width: { xs: '100%', sm: 'auto' } }}
         >
           Report Issue
         </Button>

@@ -98,10 +98,10 @@ export default function EventManagement() {
   );
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4 }} spacing={2}>
-        <Box>
-          <Typography variant="h4" fontWeight="900" color="#1e3a8a" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Box sx={{ p: { xs: 0, sm: 1 }, maxWidth: '100%', overflowX: 'hidden' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} sx={{ mb: 4 }} spacing={2}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h4" fontWeight="900" color="#1e3a8a" sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '2rem', sm: '2.125rem' } }}>
             <CampaignIcon fontSize="large" /> News & Events
           </Typography>
           <Typography variant="body2" sx={{ color: '#6b7280', mt: 0.5 }}>
@@ -109,7 +109,7 @@ export default function EventManagement() {
           </Typography>
         </Box>
         
-        <Stack direction="row" spacing={2} width={{ xs: '100%', md: 'auto' }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} width={{ xs: '100%', md: 'auto' }}>
           <TextField 
               placeholder="Search announcements..." size="small" value={searchTerm} 
               onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }} 
@@ -207,7 +207,7 @@ export default function EventManagement() {
           <Stack spacing={3} sx={{ mt: 1 }}>
             <TextField label="Announcement Title (e.g., Power outage schedule)" name="title" value={formData.title} onChange={handleChange} fullWidth autoFocus />
             
-            <Stack direction="row" spacing={2}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField select label="Category" name="type" value={formData.type} onChange={handleChange} fullWidth>
                 <MenuItem value="info">General Information</MenuItem>
                 <MenuItem value="warning">Warning (Weather, Security)</MenuItem>
